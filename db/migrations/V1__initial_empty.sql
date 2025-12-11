@@ -1,0 +1,2 @@
+-- Initial empty migration for WodStrat
+-- Add your schema definitions in subsequent migrations
