@@ -1,0 +1,37 @@
+﻿Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WodStrat.Api", "src\WodStrat.Api\WodStrat.Api.csproj", "{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{8925707B-B9E7-4F55-A0E4-E541636D132A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WodStrat.Dal", "src\WodStrat.Dal\WodStrat.Dal.csproj", "{BA6E15A2-7641-47A9-B035-C39E197E68B7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WodStrat.Services", "src\WodStrat.Services\WodStrat.Services.csproj", "{E5D4AE90-32A2-4D6F-A4CF-5FCF2B0A2E3C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BA6E15A2-7641-47A9-B035-C39E197E68B7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BA6E15A2-7641-47A9-B035-C39E197E68B7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BA6E15A2-7641-47A9-B035-C39E197E68B7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BA6E15A2-7641-47A9-B035-C39E197E68B7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E5D4AE90-32A2-4D6F-A4CF-5FCF2B0A2E3C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E5D4AE90-32A2-4D6F-A4CF-5FCF2B0A2E3C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E5D4AE90-32A2-4D6F-A4CF-5FCF2B0A2E3C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E5D4AE90-32A2-4D6F-A4CF-5FCF2B0A2E3C}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{BA6E15A2-7641-47A9-B035-C39E197E68B7} = {8925707B-B9E7-4F55-A0E4-E541636D132A}
+		{E5D4AE90-32A2-4D6F-A4CF-5FCF2B0A2E3C} = {8925707B-B9E7-4F55-A0E4-E541636D132A}
+		{A1B2C3D4-E5F6-7890-ABCD-EF1234567890} = {8925707B-B9E7-4F55-A0E4-E541636D132A}
+	EndGlobalSection
+EndGlobal

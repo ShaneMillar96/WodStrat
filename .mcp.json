@@ -1,0 +1,61 @@
+{
+  "mcpServers": {
+    "context7": {
+      "type": "sse",
+      "url": "https://mcp.context7.com/sse"
+    },
+    "github": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "-e",
+        "GITHUB_PERSONAL_ACCESS_TOKEN",
+        "-e",
+        "GITHUB_TOOLSETS",
+        "ghcr.io/github/github-mcp-server"
+      ],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "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",
+        "GITHUB_TOOLSETS": "context,orgs,pull_requests,repos"
+      }
+    },
+    "atlassian": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "-e",
+        "CONFLUENCE_URL",
+        "-e",
+        "CONFLUENCE_USERNAME",
+        "-e",
+        "CONFLUENCE_API_TOKEN",
+        "-e",
+        "JIRA_URL",
+        "-e",
+        "JIRA_USERNAME",
+        "-e",
+        "JIRA_API_TOKEN",
+        "-e",
+        "ENABLED_TOOLS",
+        "ghcr.io/sooperset/mcp-atlassian:latest"
+      ],
+      "env": {
+        "ENABLED_TOOLS": "jira_get_issue, jira_add_comment, jira_get_transitions, jira_download_attachments, jira_get_issue_comments, jira_update_issue, jira_create_issue",
+        "JIRA_URL": "https://caddieaiapp.atlassian.net/",
+        "JIRA_USERNAME": "shanemillar1996@gmail.com",
+        "JIRA_API_TOKEN": "ATATT3xFfGF0EQA6v8jyph6_Uv9CaJcJSrqwSYDVafY8Oq3cfeHEdm9rmJFd_oDIlo4FLs_mAptiqUcbm-7Cc-F4brmPwOW_k9iVFizvr_e45chwvP-AjwdIQWmMjjhQOBVMAQH8QnHwVY7hgLdDRZBCCSmeXfYq3GMP2XQH2K1IQnKbThfCbbU=BD4A78E5"
+      }
+    },
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@playwright/mcp-server"
+      ]
+    }
+  }
+}
