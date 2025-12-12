@@ -85,17 +85,31 @@ When `/jira-description` is invoked, follow these steps:
       - **Confidence Assessment**: Include final confidence level and key assumptions made
 
 5. **JIRA Integration**
-   Using the MCP JIRA connection:
-
-   - **For CREATE mode (no arguments)**:
-     - Create a new JIRA ticket with the generated technical description
-     - Use appropriate ticket type (Story, Task, etc.)
-     - Include all generated content in the description field
+   Using the MCP JIRA tools (configured via atlassian MCP server):
 
    - **For UPDATE mode (ticket ID provided in $ARGUMENTS)**:
-     - Find the specified ticket using the provided ID from $ARGUMENTS
-     - Update the ticket's description with the generated technical content
-     - Preserve any existing ticket metadata (assignee, status, etc.)
+     - First, use `jira_get_issue` MCP tool to fetch the existing ticket details:
+       - Pass the ticket ID from $ARGUMENTS (e.g., "WOD-123")
+       - Review the current ticket state and existing description
+     - Then, use `jira_update_issue` MCP tool to update the ticket:
+       - Pass the ticket ID and the generated technical description
+       - Preserve any existing ticket metadata (assignee, status, etc.)
+
+   - **For CREATE mode (no arguments)**:
+     - Use `jira_create_issue` MCP tool to create a new ticket:
+       - Set project key to "WOD"
+       - Use appropriate issue type (Story, Task, etc.)
+       - Set the summary from the feature overview
+       - Include all generated content in the description field
+
+   **Available MCP JIRA Tools:**
+   - `jira_get_issue` - Retrieve ticket details by ID
+   - `jira_create_issue` - Create a new JIRA ticket
+   - `jira_update_issue` - Update an existing ticket's fields
+   - `jira_add_comment` - Add a comment to a ticket
+   - `jira_get_issue_comments` - Get all comments on a ticket
+   - `jira_get_transitions` - Get available status transitions
+   - `jira_download_attachments` - Download ticket attachments
 
 6. **Confirmation**
    Provide feedback to the user:
