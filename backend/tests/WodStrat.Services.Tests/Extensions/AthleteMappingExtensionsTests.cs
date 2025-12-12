@@ -54,6 +54,7 @@ public class AthleteMappingExtensionsTests
         var expectedAge = 25;
         var entity = _fixture.Build<Athlete>()
             .With(x => x.DateOfBirth, DateOnly.FromDateTime(DateTime.UtcNow.AddYears(-expectedAge)))
+            .Without(a => a.Benchmarks)
             .Create();
 
         // Act
@@ -69,6 +70,7 @@ public class AthleteMappingExtensionsTests
         // Arrange
         var entity = _fixture.Build<Athlete>()
             .With(x => x.DateOfBirth, (DateOnly?)null)
+            .Without(a => a.Benchmarks)
             .Create();
 
         // Act
@@ -245,6 +247,7 @@ public class AthleteMappingExtensionsTests
         var originalUpdatedAt = DateTime.UtcNow.AddDays(-7);
         var entity = _fixture.Build<Athlete>()
             .With(x => x.UpdatedAt, originalUpdatedAt)
+            .Without(a => a.Benchmarks)
             .Create();
 
         var dto = new UpdateAthleteDto
