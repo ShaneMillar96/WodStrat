@@ -73,6 +73,7 @@ public class AthleteServiceTests
         // Arrange
         var athlete = _fixture.Build<Athlete>()
             .With(a => a.IsDeleted, true)
+            .Without(a => a.Benchmarks)
             .Create();
         var queryable = new[] { athlete }.AsQueryable().BuildMock();
         _database.Get<Athlete>().Returns(queryable);
@@ -92,6 +93,7 @@ public class AthleteServiceTests
         var athlete = _fixture.Build<Athlete>()
             .With(a => a.DateOfBirth, DateOnly.FromDateTime(DateTime.UtcNow.AddYears(-expectedAge)))
             .With(a => a.IsDeleted, false)
+            .Without(a => a.Benchmarks)
             .Create();
         var queryable = new[] { athlete }.AsQueryable().BuildMock();
         _database.Get<Athlete>().Returns(queryable);
@@ -111,6 +113,7 @@ public class AthleteServiceTests
         var athlete = _fixture.Build<Athlete>()
             .With(a => a.DateOfBirth, (DateOnly?)null)
             .With(a => a.IsDeleted, false)
+            .Without(a => a.Benchmarks)
             .Create();
         var queryable = new[] { athlete }.AsQueryable().BuildMock();
         _database.Get<Athlete>().Returns(queryable);
@@ -135,6 +138,7 @@ public class AthleteServiceTests
         var athlete = _fixture.Build<Athlete>()
             .With(a => a.UserId, userId)
             .With(a => a.IsDeleted, false)
+            .Without(a => a.Benchmarks)
             .Create();
         var queryable = new[] { athlete }.AsQueryable().BuildMock();
         _database.Get<Athlete>().Returns(queryable);
@@ -169,6 +173,7 @@ public class AthleteServiceTests
         var athlete = _fixture.Build<Athlete>()
             .With(a => a.UserId, userId)
             .With(a => a.IsDeleted, true)
+            .Without(a => a.Benchmarks)
             .Create();
         var queryable = new[] { athlete }.AsQueryable().BuildMock();
         _database.Get<Athlete>().Returns(queryable);
@@ -331,6 +336,7 @@ public class AthleteServiceTests
         // Arrange
         var athlete = _fixture.Build<Athlete>()
             .With(a => a.IsDeleted, true)
+            .Without(a => a.Benchmarks)
             .Create();
         var queryable = new[] { athlete }.AsQueryable().BuildMock();
         _database.Get<Athlete>().Returns(queryable);
@@ -353,6 +359,7 @@ public class AthleteServiceTests
         var athlete = _fixture.Build<Athlete>()
             .With(a => a.UpdatedAt, originalUpdatedAt)
             .With(a => a.IsDeleted, false)
+            .Without(a => a.Benchmarks)
             .Create();
         var queryable = new[] { athlete }.AsQueryable().BuildMock();
         _database.Get<Athlete>().Returns(queryable);
@@ -410,6 +417,7 @@ public class AthleteServiceTests
         // Arrange
         var athlete = _fixture.Build<Athlete>()
             .With(a => a.IsDeleted, true)
+            .Without(a => a.Benchmarks)
             .Create();
         var queryable = new[] { athlete }.AsQueryable().BuildMock();
         _database.Get<Athlete>().Returns(queryable);
@@ -430,6 +438,7 @@ public class AthleteServiceTests
         var athlete = _fixture.Build<Athlete>()
             .With(a => a.UpdatedAt, originalUpdatedAt)
             .With(a => a.IsDeleted, false)
+            .Without(a => a.Benchmarks)
             .Create();
         var queryable = new[] { athlete }.AsQueryable().BuildMock();
         _database.Get<Athlete>().Returns(queryable);

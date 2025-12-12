@@ -25,6 +25,7 @@ public class AthleteCustomization : ICustomization
             .With(x => x.PrimaryGoal, AthleteGoal.ImprovePacing)
             .With(x => x.IsDeleted, false)
             .With(x => x.CreatedAt, DateTime.UtcNow.AddDays(-7))
-            .With(x => x.UpdatedAt, DateTime.UtcNow.AddDays(-1)));
+            .With(x => x.UpdatedAt, DateTime.UtcNow.AddDays(-1))
+            .Without(x => x.Benchmarks)); // Avoid circular reference with AthleteBenchmark
     }
 }

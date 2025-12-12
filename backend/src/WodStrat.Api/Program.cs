@@ -19,6 +19,7 @@ builder.Services.AddScoped<IWodStratDatabase, WodStratDbContext>();
 
 // Services
 builder.Services.AddScoped<IAthleteService, AthleteService>();
+builder.Services.AddScoped<IBenchmarkService, BenchmarkService>();
 
 // FluentValidation
 builder.Services.AddFluentValidationAutoValidation();
