@@ -1,0 +1,348 @@
+using AutoFixture;
+using AutoFixture.AutoNSubstitute;
+using FluentAssertions;
+using WodStrat.Dal.Enums;
+using WodStrat.Dal.Models;
+using WodStrat.Services.Dtos;
+using WodStrat.Services.Extensions;
+using WodStrat.Services.Tests.Customizations;
+using Xunit;
+
+namespace WodStrat.Services.Tests.Extensions;
+
+/// <summary>
+/// Unit tests for AthleteMappingExtensions.
+/// </summary>
+public class AthleteMappingExtensionsTests
+{
+    private readonly IFixture _fixture;
+
+    public AthleteMappingExtensionsTests()
+    {
+        _fixture = new Fixture()
+            .Customize(new AutoNSubstituteCustomization())
+            .Customize(new AthleteCustomization());
+    }
+
+    #region ToDto Tests
+
+    [Fact]
+    public void ToDto_ValidEntity_MapsAllProperties()
+    {
+        // Arrange
+        var entity = _fixture.Create<Athlete>();
+
+        // Act
+        var dto = entity.ToDto();
+
+        // Assert
+        dto.Id.Should().Be(entity.Id);
+        dto.Name.Should().Be(entity.Name);
+        dto.Gender.Should().Be(entity.Gender);
+        dto.HeightCm.Should().Be(entity.HeightCm);
+        dto.WeightKg.Should().Be(entity.WeightKg);
+        dto.ExperienceLevel.Should().Be(entity.ExperienceLevel.ToString());
+        dto.PrimaryGoal.Should().Be(entity.PrimaryGoal.ToString());
+        dto.CreatedAt.Should().Be(entity.CreatedAt);
+        dto.UpdatedAt.Should().Be(entity.UpdatedAt);
+    }
+
+    [Fact]
+    public void ToDto_EntityWithDateOfBirth_CalculatesAge()
+    {
+        // Arrange
+        var expectedAge = 25;
+        var entity = _fixture.Build<Athlete>()
+            .With(x => x.DateOfBirth, DateOnly.FromDateTime(DateTime.UtcNow.AddYears(-expectedAge)))
+            .Create();
+
+        // Act
+        var dto = entity.ToDto();
+
+        // Assert
+        dto.Age.Should().Be(expectedAge);
+    }
+
+    [Fact]
+    public void ToDto_EntityWithNullDateOfBirth_ReturnsNullAge()
+    {
+        // Arrange
+        var entity = _fixture.Build<Athlete>()
+            .With(x => x.DateOfBirth, (DateOnly?)null)
+            .Create();
+
+        // Act
+        var dto = entity.ToDto();
+
+        // Assert
+        dto.Age.Should().BeNull();
+    }
+
+    [Fact]
+    public void ToDto_NeverExposesDateOfBirth()
+    {
+        // Arrange
+        var entity = _fixture.Create<Athlete>();
+
+        // Act
+        var dto = entity.ToDto();
+
+        // Assert
+        // AthleteDto should not have a DateOfBirth property
+        var properties = typeof(AthleteDto).GetProperties();
+        properties.Should().NotContain(p => p.Name == "DateOfBirth");
+    }
+
+    #endregion
+
+    #region ToEntity Tests
+
+    [Fact]
+    public void ToEntity_ValidDto_CreatesEntityWithNewId()
+    {
+        // Arrange
+        var dto = new CreateAthleteDto
+        {
+            Name = "Test Athlete",
+            DateOfBirth = DateOnly.FromDateTime(DateTime.UtcNow.AddYears(-25)),
+            Gender = "Male",
+            HeightCm = 180m,
+            WeightKg = 85m,
+            ExperienceLevel = "Intermediate",
+            PrimaryGoal = "ImprovePacing"
+        };
+
+        // Act
+        var entity = dto.ToEntity();
+
+        // Assert
+        entity.Id.Should().NotBeEmpty();
+        entity.Name.Should().Be(dto.Name);
+        entity.DateOfBirth.Should().Be(dto.DateOfBirth);
+        entity.Gender.Should().Be(dto.Gender);
+        entity.HeightCm.Should().Be(dto.HeightCm);
+        entity.WeightKg.Should().Be(dto.WeightKg);
+        entity.ExperienceLevel.Should().Be(ExperienceLevel.Intermediate);
+        entity.PrimaryGoal.Should().Be(AthleteGoal.ImprovePacing);
+    }
+
+    [Fact]
+    public void ToEntity_SetsIsDeletedFalse()
+    {
+        // Arrange
+        var dto = new CreateAthleteDto
+        {
+            Name = "Test",
+            ExperienceLevel = "Beginner",
+            PrimaryGoal = "GeneralFitness"
+        };
+
+        // Act
+        var entity = dto.ToEntity();
+
+        // Assert
+        entity.IsDeleted.Should().BeFalse();
+    }
+
+    [Fact]
+    public void ToEntity_SetsCreatedAtAndUpdatedAt()
+    {
+        // Arrange
+        var dto = new CreateAthleteDto
+        {
+            Name = "Test",
+            ExperienceLevel = "Beginner",
+            PrimaryGoal = "GeneralFitness"
+        };
+        var before = DateTime.UtcNow;
+
+        // Act
+        var entity = dto.ToEntity();
+
+        var after = DateTime.UtcNow;
+
+        // Assert
+        entity.CreatedAt.Should().BeOnOrAfter(before).And.BeOnOrBefore(after);
+        entity.UpdatedAt.Should().BeOnOrAfter(before).And.BeOnOrBefore(after);
+    }
+
+    [Fact]
+    public void ToEntity_ParsesEnumsCaseInsensitive()
+    {
+        // Arrange
+        var dto = new CreateAthleteDto
+        {
+            Name = "Test",
+            ExperienceLevel = "ADVANCED",
+            PrimaryGoal = "competitionprep"
+        };
+
+        // Act
+        var entity = dto.ToEntity();
+
+        // Assert
+        entity.ExperienceLevel.Should().Be(ExperienceLevel.Advanced);
+        entity.PrimaryGoal.Should().Be(AthleteGoal.CompetitionPrep);
+    }
+
+    [Fact]
+    public void ToEntity_InvalidEnum_UsesDefault()
+    {
+        // Arrange
+        var dto = new CreateAthleteDto
+        {
+            Name = "Test",
+            ExperienceLevel = "InvalidLevel",
+            PrimaryGoal = "InvalidGoal"
+        };
+
+        // Act
+        var entity = dto.ToEntity();
+
+        // Assert
+        // Should use entity default values (Intermediate and ImprovePacing)
+        entity.ExperienceLevel.Should().Be(ExperienceLevel.Intermediate);
+        entity.PrimaryGoal.Should().Be(AthleteGoal.ImprovePacing);
+    }
+
+    #endregion
+
+    #region ApplyTo Tests
+
+    [Fact]
+    public void ApplyTo_ValidDto_UpdatesAllProperties()
+    {
+        // Arrange
+        var entity = _fixture.Create<Athlete>();
+        var dto = new UpdateAthleteDto
+        {
+            Name = "Updated Name",
+            DateOfBirth = DateOnly.FromDateTime(DateTime.UtcNow.AddYears(-30)),
+            Gender = "Female",
+            HeightCm = 165m,
+            WeightKg = 60m,
+            ExperienceLevel = "Advanced",
+            PrimaryGoal = "BuildStrength"
+        };
+
+        // Act
+        dto.ApplyTo(entity);
+
+        // Assert
+        entity.Name.Should().Be(dto.Name);
+        entity.DateOfBirth.Should().Be(dto.DateOfBirth);
+        entity.Gender.Should().Be(dto.Gender);
+        entity.HeightCm.Should().Be(dto.HeightCm);
+        entity.WeightKg.Should().Be(dto.WeightKg);
+        entity.ExperienceLevel.Should().Be(ExperienceLevel.Advanced);
+        entity.PrimaryGoal.Should().Be(AthleteGoal.BuildStrength);
+    }
+
+    [Fact]
+    public void ApplyTo_UpdatesUpdatedAtTimestamp()
+    {
+        // Arrange
+        var originalUpdatedAt = DateTime.UtcNow.AddDays(-7);
+        var entity = _fixture.Build<Athlete>()
+            .With(x => x.UpdatedAt, originalUpdatedAt)
+            .Create();
+
+        var dto = new UpdateAthleteDto
+        {
+            Name = "Test",
+            ExperienceLevel = "Beginner",
+            PrimaryGoal = "GeneralFitness"
+        };
+
+        // Act
+        dto.ApplyTo(entity);
+
+        // Assert
+        entity.UpdatedAt.Should().BeAfter(originalUpdatedAt);
+    }
+
+    [Fact]
+    public void ApplyTo_DoesNotModifyIdOrCreatedAt()
+    {
+        // Arrange
+        var entity = _fixture.Create<Athlete>();
+        var originalId = entity.Id;
+        var originalCreatedAt = entity.CreatedAt;
+
+        var dto = new UpdateAthleteDto
+        {
+            Name = "Test",
+            ExperienceLevel = "Beginner",
+            PrimaryGoal = "GeneralFitness"
+        };
+
+        // Act
+        dto.ApplyTo(entity);
+
+        // Assert
+        entity.Id.Should().Be(originalId);
+        entity.CreatedAt.Should().Be(originalCreatedAt);
+    }
+
+    #endregion
+
+    #region CalculateAge Tests
+
+    [Fact]
+    public void CalculateAge_NullDateOfBirth_ReturnsNull()
+    {
+        // Act
+        var age = AthleteMappingExtensions.CalculateAge(null);
+
+        // Assert
+        age.Should().BeNull();
+    }
+
+    [Theory]
+    [InlineData(20)]
+    [InlineData(30)]
+    [InlineData(50)]
+    public void CalculateAge_ValidDateOfBirth_ReturnsCorrectAge(int expectedAge)
+    {
+        // Arrange
+        var dateOfBirth = DateOnly.FromDateTime(DateTime.UtcNow.AddYears(-expectedAge));
+
+        // Act
+        var age = AthleteMappingExtensions.CalculateAge(dateOfBirth);
+
+        // Assert
+        age.Should().Be(expectedAge);
+    }
+
+    [Fact]
+    public void CalculateAge_BirthdayNotYetThisYear_ReturnsCorrectAge()
+    {
+        // Arrange
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        // Birthday is tomorrow (hasn't happened yet this year)
+        var dateOfBirth = new DateOnly(today.Year - 25, today.Month, today.Day).AddDays(1);
+
+        // Act
+        var age = AthleteMappingExtensions.CalculateAge(dateOfBirth);
+
+        // Assert
+        age.Should().Be(24); // Not yet 25
+    }
+
+    [Fact]
+    public void CalculateAge_BirthdayWasYesterday_ReturnsCorrectAge()
+    {
+        // Arrange
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        // Birthday was yesterday (already happened this year)
+        var dateOfBirth = new DateOnly(today.Year - 25, today.Month, today.Day).AddDays(-1);
+
+        // Act
+        var age = AthleteMappingExtensions.CalculateAge(dateOfBirth);
+
+        // Assert
+        age.Should().Be(25);
+    }
+
+    #endregion
+}

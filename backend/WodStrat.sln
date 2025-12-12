@@ -1,4 +1,4 @@
-﻿Microsoft Visual Studio Solution File, Format Version 12.00
+Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
@@ -9,6 +9,12 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WodStrat.Dal", "src\WodStrat.Dal\WodStrat.Dal.csproj", "{BA6E15A2-7641-47A9-B035-C39E197E68B7}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WodStrat.Services", "src\WodStrat.Services\WodStrat.Services.csproj", "{E5D4AE90-32A2-4D6F-A4CF-5FCF2B0A2E3C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{F1234567-89AB-CDEF-0123-456789ABCDEF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WodStrat.Services.Tests", "tests\WodStrat.Services.Tests\WodStrat.Services.Tests.csproj", "{11111111-2222-3333-4444-555555555555}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WodStrat.Api.Tests", "tests\WodStrat.Api.Tests\WodStrat.Api.Tests.csproj", "{66666666-7777-8888-9999-AAAAAAAAAAAA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -28,10 +34,20 @@ Global
 		{E5D4AE90-32A2-4D6F-A4CF-5FCF2B0A2E3C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E5D4AE90-32A2-4D6F-A4CF-5FCF2B0A2E3C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E5D4AE90-32A2-4D6F-A4CF-5FCF2B0A2E3C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{11111111-2222-3333-4444-555555555555}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{11111111-2222-3333-4444-555555555555}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{11111111-2222-3333-4444-555555555555}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{11111111-2222-3333-4444-555555555555}.Release|Any CPU.Build.0 = Release|Any CPU
+		{66666666-7777-8888-9999-AAAAAAAAAAAA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{66666666-7777-8888-9999-AAAAAAAAAAAA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{66666666-7777-8888-9999-AAAAAAAAAAAA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{66666666-7777-8888-9999-AAAAAAAAAAAA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{BA6E15A2-7641-47A9-B035-C39E197E68B7} = {8925707B-B9E7-4F55-A0E4-E541636D132A}
 		{E5D4AE90-32A2-4D6F-A4CF-5FCF2B0A2E3C} = {8925707B-B9E7-4F55-A0E4-E541636D132A}
 		{A1B2C3D4-E5F6-7890-ABCD-EF1234567890} = {8925707B-B9E7-4F55-A0E4-E541636D132A}
+		{11111111-2222-3333-4444-555555555555} = {F1234567-89AB-CDEF-0123-456789ABCDEF}
+		{66666666-7777-8888-9999-AAAAAAAAAAAA} = {F1234567-89AB-CDEF-0123-456789ABCDEF}
 	EndGlobalSection
 EndGlobal
