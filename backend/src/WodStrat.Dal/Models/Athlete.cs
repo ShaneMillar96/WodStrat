@@ -46,4 +46,10 @@ public class Athlete : EntityBase
     /// Primary training goal.
     /// </summary>
     public AthleteGoal PrimaryGoal { get; set; } = AthleteGoal.ImprovePacing;
+
+    // Navigation properties
+    /// <summary>
+    /// Collection of benchmark results for this athlete.
+    /// </summary>
+    public ICollection<AthleteBenchmark> Benchmarks { get; set; } = new List<AthleteBenchmark>();
 }
