@@ -20,3 +20,24 @@ export type {
   ValidationErrors,
   PaginatedResponse,
 } from './api';
+
+export type {
+  BenchmarkCategory,
+  BenchmarkMetricType,
+  BenchmarkDefinition,
+  AthleteBenchmark,
+  BenchmarkSummary,
+  CreateBenchmarkRequest,
+  UpdateBenchmarkRequest,
+  BenchmarkFormData,
+  BenchmarkRowData,
+} from './benchmark';
+
+export {
+  BENCHMARK_CATEGORY_LABELS,
+  BENCHMARK_METRIC_LABELS,
+  BENCHMARK_CATEGORY_COLORS,
+  ALL_BENCHMARK_CATEGORIES,
+  TOTAL_BENCHMARK_COUNT,
+  MINIMUM_BENCHMARK_REQUIREMENT,
+} from './benchmark';

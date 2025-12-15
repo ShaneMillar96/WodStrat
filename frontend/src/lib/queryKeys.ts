@@ -12,6 +12,18 @@ export const queryKeys = {
     list: (filters: Record<string, unknown>) =>
       [...queryKeys.athletes.lists(), filters] as const,
     details: () => [...queryKeys.athletes.all, 'detail'] as const,
-    detail: (id: number) => [...queryKeys.athletes.details(), id] as const,
+    detail: (id: string) => [...queryKeys.athletes.details(), id] as const,
+  },
+
+  /**
+   * All benchmark-related queries
+   */
+  benchmarks: {
+    all: ['benchmarks'] as const,
+    definitions: () => [...queryKeys.benchmarks.all, 'definitions'] as const,
+    athleteBenchmarks: (athleteId: string) =>
+      [...queryKeys.benchmarks.all, 'athlete', athleteId] as const,
+    summary: (athleteId: string) =>
+      [...queryKeys.benchmarks.all, 'summary', athleteId] as const,
   },
 };
