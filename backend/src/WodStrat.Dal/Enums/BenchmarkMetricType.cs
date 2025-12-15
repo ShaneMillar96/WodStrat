@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using NpgsqlTypes;
 
 namespace WodStrat.Dal.Enums;
 
@@ -11,23 +12,27 @@ public enum BenchmarkMetricType
     /// Duration in seconds (lower is better).
     /// </summary>
     [Description("Duration in seconds")]
+    [PgName("time")]
     Time,
 
     /// <summary>
     /// Count of repetitions (higher is better).
     /// </summary>
     [Description("Count of repetitions")]
+    [PgName("reps")]
     Reps,
 
     /// <summary>
     /// Weight in kilograms (higher is better).
     /// </summary>
     [Description("Weight in kilograms")]
+    [PgName("weight")]
     Weight,
 
     /// <summary>
     /// Pace in seconds per unit (lower is better).
     /// </summary>
     [Description("Pace in seconds per unit")]
+    [PgName("pace")]
     Pace
 }

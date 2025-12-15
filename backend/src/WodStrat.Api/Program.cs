@@ -3,18 +3,27 @@ using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
+using Npgsql;
 using WodStrat.Api.Validators;
 using WodStrat.Dal;
 using WodStrat.Dal.Contexts;
+using WodStrat.Dal.Enums;
 using WodStrat.Dal.Interfaces;
 using WodStrat.Services.Interfaces;
 using WodStrat.Services.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Database (PostgreSQL)
+// Database (PostgreSQL) with enum type mappings
+var dataSourceBuilder = new NpgsqlDataSourceBuilder(EnvironmentVariables.DbConnectionString);
+dataSourceBuilder.MapEnum<ExperienceLevel>("experience_level");
+dataSourceBuilder.MapEnum<AthleteGoal>("athlete_goal");
+dataSourceBuilder.MapEnum<BenchmarkCategory>("benchmark_category");
+dataSourceBuilder.MapEnum<BenchmarkMetricType>("benchmark_metric_type");
+var dataSource = dataSourceBuilder.Build();
+
 builder.Services.AddDbContext<WodStratDbContext>(options =>
-    options.UseNpgsql(EnvironmentVariables.DbConnectionString));
+    options.UseNpgsql(dataSource));
 builder.Services.AddScoped<IWodStratDatabase, WodStratDbContext>();
 
 // Services
