@@ -4,6 +4,7 @@ import {
   RouterProvider,
 } from 'react-router-dom';
 import { ProfilePage } from './pages/ProfilePage';
+import { BenchmarksPage } from './pages/BenchmarksPage';
 
 /**
  * Application route definitions
@@ -20,6 +21,10 @@ const router = createBrowserRouter([
   {
     path: '/profile/:id',
     element: <ProfilePage />,
+  },
+  {
+    path: '/athletes/:athleteId/benchmarks',
+    element: <BenchmarksPage />,
   },
   {
     // Catch-all route for 404

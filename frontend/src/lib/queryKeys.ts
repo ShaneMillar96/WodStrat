@@ -14,4 +14,16 @@ export const queryKeys = {
     details: () => [...queryKeys.athletes.all, 'detail'] as const,
     detail: (id: number) => [...queryKeys.athletes.details(), id] as const,
   },
+
+  /**
+   * All benchmark-related queries
+   */
+  benchmarks: {
+    all: ['benchmarks'] as const,
+    definitions: () => [...queryKeys.benchmarks.all, 'definitions'] as const,
+    athleteBenchmarks: (athleteId: string) =>
+      [...queryKeys.benchmarks.all, 'athlete', athleteId] as const,
+    summary: (athleteId: string) =>
+      [...queryKeys.benchmarks.all, 'summary', athleteId] as const,
+  },
 };
