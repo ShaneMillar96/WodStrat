@@ -32,7 +32,7 @@ function getDefaultValues(
 ): BenchmarkSchemaType {
   if (existingBenchmark) {
     return {
-      benchmarkDefinitionId: definition.id,
+      benchmarkDefinitionId: String(definition.id),
       value: convertNumberToFormValue(existingBenchmark.value, definition.metricType),
       recordedAt: existingBenchmark.recordedAt.split('T')[0], // Get date part only
       notes: existingBenchmark.notes || '',
@@ -40,7 +40,7 @@ function getDefaultValues(
   }
 
   return {
-    benchmarkDefinitionId: definition.id,
+    benchmarkDefinitionId: String(definition.id),
     value: '',
     recordedAt: new Date().toISOString().split('T')[0], // Today's date
     notes: '',

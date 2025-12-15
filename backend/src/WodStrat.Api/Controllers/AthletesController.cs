@@ -28,10 +28,10 @@ public class AthletesController : ControllerBase
     /// <returns>The athlete profile.</returns>
     /// <response code="200">Returns the athlete profile.</response>
     /// <response code="404">Athlete not found or has been deleted.</response>
-    [HttpGet("{id:guid}")]
+    [HttpGet("{id:int}")]
     [ProducesResponseType(typeof(AthleteResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<AthleteResponse>> GetById(Guid id, CancellationToken ct)
+    public async Task<ActionResult<AthleteResponse>> GetById(int id, CancellationToken ct)
     {
         var athlete = await _athleteService.GetByIdAsync(id, ct);
 
@@ -96,12 +96,12 @@ public class AthletesController : ControllerBase
     /// <response code="200">Athlete profile updated successfully.</response>
     /// <response code="400">Validation errors in request.</response>
     /// <response code="404">Athlete not found or has been deleted.</response>
-    [HttpPut("{id:guid}")]
+    [HttpPut("{id:int}")]
     [ProducesResponseType(typeof(AthleteResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<AthleteResponse>> Update(
-        Guid id,
+        int id,
         [FromBody] UpdateAthleteRequest request,
         CancellationToken ct)
     {
@@ -124,10 +124,10 @@ public class AthletesController : ControllerBase
     /// <returns>No content on success.</returns>
     /// <response code="204">Athlete profile deleted successfully.</response>
     /// <response code="404">Athlete not found or already deleted.</response>
-    [HttpDelete("{id:guid}")]
+    [HttpDelete("{id:int}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
+    public async Task<IActionResult> Delete(int id, CancellationToken ct)
     {
         var success = await _athleteService.DeleteAsync(id, ct);
 

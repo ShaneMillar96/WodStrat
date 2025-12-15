@@ -8,7 +8,7 @@ public class BenchmarkDefinitionDto
     /// <summary>
     /// Unique identifier for the benchmark definition.
     /// </summary>
-    public Guid Id { get; set; }
+    public int Id { get; set; }
 
     /// <summary>
     /// Display name of the benchmark (e.g., "500m Row").

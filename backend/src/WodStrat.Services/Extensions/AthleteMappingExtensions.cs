@@ -40,7 +40,7 @@ public static class AthleteMappingExtensions
     {
         var entity = new Athlete
         {
-            Id = Guid.NewGuid(),
+            // Id is NOT set - database will auto-generate via SERIAL/IDENTITY
             Name = dto.Name,
             DateOfBirth = dto.DateOfBirth,
             Gender = dto.Gender,

@@ -14,7 +14,7 @@ public class BenchmarkDtoCustomization : ICustomization
         fixture.Register(() => DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-7)));
 
         fixture.Customize<BenchmarkDefinitionDto>(c => c
-            .With(x => x.Id, Guid.NewGuid())
+            .With(x => x.Id, () => fixture.Create<int>())
             .With(x => x.Name, "500m Row")
             .With(x => x.Slug, "500m-row")
             .With(x => x.Description, "500 meter row for time")
@@ -24,9 +24,9 @@ public class BenchmarkDtoCustomization : ICustomization
             .With(x => x.DisplayOrder, 1));
 
         fixture.Customize<AthleteBenchmarkDto>(c => c
-            .With(x => x.Id, Guid.NewGuid())
-            .With(x => x.AthleteId, Guid.NewGuid())
-            .With(x => x.BenchmarkDefinitionId, Guid.NewGuid())
+            .With(x => x.Id, () => fixture.Create<int>())
+            .With(x => x.AthleteId, () => fixture.Create<int>())
+            .With(x => x.BenchmarkDefinitionId, () => fixture.Create<int>())
             .With(x => x.BenchmarkName, "500m Row")
             .With(x => x.BenchmarkSlug, "500m-row")
             .With(x => x.BenchmarkCategory, "Cardio")
@@ -40,7 +40,7 @@ public class BenchmarkDtoCustomization : ICustomization
             .With(x => x.UpdatedAt, DateTime.UtcNow.AddDays(-1)));
 
         fixture.Customize<BenchmarkSummaryDto>(c => c
-            .With(x => x.AthleteId, Guid.NewGuid())
+            .With(x => x.AthleteId, () => fixture.Create<int>())
             .With(x => x.TotalBenchmarks, 5)
             .With(x => x.MeetsMinimumRequirement, true)
             .With(x => x.MinimumRequired, 3)

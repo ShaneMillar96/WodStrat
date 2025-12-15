@@ -61,7 +61,7 @@ public class AthleteServiceTests
         _database.Get<Athlete>().Returns(queryable);
 
         // Act
-        var result = await _sut.GetByIdAsync(Guid.NewGuid());
+        var result = await _sut.GetByIdAsync(_fixture.Create<int>());
 
         // Assert
         result.Should().BeNull();
@@ -134,7 +134,7 @@ public class AthleteServiceTests
     public async Task GetByUserIdAsync_ValidUserId_ReturnsAthleteDto()
     {
         // Arrange
-        var userId = Guid.NewGuid();
+        var userId = _fixture.Create<int>();
         var athlete = _fixture.Build<Athlete>()
             .With(a => a.UserId, userId)
             .With(a => a.IsDeleted, false)
@@ -159,7 +159,7 @@ public class AthleteServiceTests
         _database.Get<Athlete>().Returns(queryable);
 
         // Act
-        var result = await _sut.GetByUserIdAsync(Guid.NewGuid());
+        var result = await _sut.GetByUserIdAsync(_fixture.Create<int>());
 
         // Assert
         result.Should().BeNull();
@@ -169,7 +169,7 @@ public class AthleteServiceTests
     public async Task GetByUserIdAsync_DeletedAthlete_ReturnsNull()
     {
         // Arrange
-        var userId = Guid.NewGuid();
+        var userId = _fixture.Create<int>();
         var athlete = _fixture.Build<Athlete>()
             .With(a => a.UserId, userId)
             .With(a => a.IsDeleted, true)
@@ -216,7 +216,7 @@ public class AthleteServiceTests
         result.Name.Should().Be(dto.Name);
         result.ExperienceLevel.Should().Be(dto.ExperienceLevel);
         result.PrimaryGoal.Should().Be(dto.PrimaryGoal);
-        result.Id.Should().NotBeEmpty();
+        // Note: ID is not set until database assigns it (auto-increment)
 
         savedEntity.Should().NotBeNull();
         savedEntity!.IsDeleted.Should().BeFalse();
@@ -323,7 +323,7 @@ public class AthleteServiceTests
         var dto = new UpdateAthleteDto { Name = "Test" };
 
         // Act
-        var result = await _sut.UpdateAsync(Guid.NewGuid(), dto);
+        var result = await _sut.UpdateAsync(_fixture.Create<int>(), dto);
 
         // Assert
         result.Should().BeNull();
@@ -404,7 +404,7 @@ public class AthleteServiceTests
         _database.Get<Athlete>().Returns(queryable);
 
         // Act
-        var result = await _sut.DeleteAsync(Guid.NewGuid());
+        var result = await _sut.DeleteAsync(_fixture.Create<int>());
 
         // Assert
         result.Should().BeFalse();

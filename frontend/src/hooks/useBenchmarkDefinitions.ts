@@ -61,7 +61,7 @@ export function useBenchmarkDefinitions(category?: BenchmarkCategory | 'All') {
     error: query.error as ApiException | null,
 
     // Helper to get a definition by ID
-    getDefinitionById: (id: string) =>
+    getDefinitionById: (id: number) =>
       query.data?.find((def) => def.id === id) ?? null,
 
     // Helper to get a definition by slug

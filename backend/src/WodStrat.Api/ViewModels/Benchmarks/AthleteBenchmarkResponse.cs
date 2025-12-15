@@ -8,20 +8,20 @@ public class AthleteBenchmarkResponse
     /// <summary>
     /// Unique identifier for the athlete benchmark.
     /// </summary>
-    /// <example>550e8400-e29b-41d4-a716-446655440000</example>
-    public Guid Id { get; set; }
+    /// <example>1</example>
+    public int Id { get; set; }
 
     /// <summary>
     /// Reference to the athlete who recorded this benchmark.
     /// </summary>
-    /// <example>7c9e6679-7425-40de-944b-e07fc1f90ae7</example>
-    public Guid AthleteId { get; set; }
+    /// <example>1</example>
+    public int AthleteId { get; set; }
 
     /// <summary>
     /// Reference to the benchmark definition.
     /// </summary>
-    /// <example>3fa85f64-5717-4562-b3fc-2c963f66afa6</example>
-    public Guid BenchmarkDefinitionId { get; set; }
+    /// <example>5</example>
+    public int BenchmarkDefinitionId { get; set; }
 
     /// <summary>
     /// Display name of the benchmark (denormalized for convenience).

@@ -12,7 +12,7 @@ export type BenchmarkMetricType = 'Time' | 'Reps' | 'Weight' | 'Pace';
  * Benchmark definition as returned from the API
  */
 export interface BenchmarkDefinition {
-  id: string;
+  id: number;
   name: string;
   slug: string;
   description: string | null;
@@ -26,9 +26,9 @@ export interface BenchmarkDefinition {
  * Athlete benchmark result as returned from the API
  */
 export interface AthleteBenchmark {
-  id: string;
-  athleteId: string;
-  benchmarkDefinitionId: string;
+  id: number;
+  athleteId: number;
+  benchmarkDefinitionId: number;
   benchmarkName: string;
   benchmarkCategory: BenchmarkCategory;
   value: number;
@@ -44,7 +44,7 @@ export interface AthleteBenchmark {
  * Benchmark summary response from the API
  */
 export interface BenchmarkSummary {
-  athleteId: string;
+  athleteId: number;
   totalBenchmarks: number;
   meetsMinimumRequirement: boolean;
   minimumRequired: number;
@@ -56,7 +56,7 @@ export interface BenchmarkSummary {
  * Request payload for creating a new benchmark result
  */
 export interface CreateBenchmarkRequest {
-  benchmarkDefinitionId: string;
+  benchmarkDefinitionId: number;
   value: number;
   recordedAt: string;
   notes?: string | null;

@@ -25,7 +25,7 @@ public class RecordBenchmarkRequestValidatorTests
     {
         // Arrange
         var request = CreateValidRequest();
-        request.BenchmarkDefinitionId = Guid.Empty;
+        request.BenchmarkDefinitionId = 0;
 
         // Act
         var result = _validator.TestValidate(request);
@@ -261,7 +261,7 @@ public class RecordBenchmarkRequestValidatorTests
         // Arrange
         var request = new RecordBenchmarkRequest
         {
-            BenchmarkDefinitionId = Guid.NewGuid(),
+            BenchmarkDefinitionId = 1,
             Value = 195.5m
         };
 
@@ -278,7 +278,7 @@ public class RecordBenchmarkRequestValidatorTests
         // Arrange
         var request = new RecordBenchmarkRequest
         {
-            BenchmarkDefinitionId = Guid.Empty,
+            BenchmarkDefinitionId = 0,
             Value = 0,
             RecordedAt = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(1)),
             Notes = new string('A', 501)
@@ -302,7 +302,7 @@ public class RecordBenchmarkRequestValidatorTests
     {
         return new RecordBenchmarkRequest
         {
-            BenchmarkDefinitionId = Guid.NewGuid(),
+            BenchmarkDefinitionId = 1,
             Value = 195.5m,
             RecordedAt = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-7)),
             Notes = "RX"

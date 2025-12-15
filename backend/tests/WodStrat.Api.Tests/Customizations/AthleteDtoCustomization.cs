@@ -11,7 +11,7 @@ public class AthleteDtoCustomization : ICustomization
     public void Customize(IFixture fixture)
     {
         fixture.Customize<AthleteDto>(c => c
-            .With(x => x.Id, Guid.NewGuid())
+            .With(x => x.Id, () => fixture.Create<int>())
             .With(x => x.Name, "Test Athlete")
             .With(x => x.Age, 25)
             .With(x => x.Gender, "Male")

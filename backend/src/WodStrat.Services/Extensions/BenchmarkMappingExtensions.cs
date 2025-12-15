@@ -67,11 +67,11 @@ public static class BenchmarkMappingExtensions
     /// <param name="dto">The record DTO.</param>
     /// <param name="athleteId">The athlete's unique identifier.</param>
     /// <returns>A new athlete benchmark entity.</returns>
-    public static AthleteBenchmark ToEntity(this RecordBenchmarkDto dto, Guid athleteId)
+    public static AthleteBenchmark ToEntity(this RecordBenchmarkDto dto, int athleteId)
     {
         return new AthleteBenchmark
         {
-            Id = Guid.NewGuid(),
+            // Id is NOT set - database will auto-generate via SERIAL/IDENTITY
             AthleteId = athleteId,
             BenchmarkDefinitionId = dto.BenchmarkDefinitionId,
             Value = dto.Value,

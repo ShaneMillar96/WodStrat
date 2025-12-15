@@ -10,7 +10,7 @@ public class Athlete : EntityBase
     /// <summary>
     /// Future foreign key to the users table (authentication Phase 2+).
     /// </summary>
-    public Guid? UserId { get; set; }
+    public int? UserId { get; set; }
 
     /// <summary>
     /// Athlete's display name.

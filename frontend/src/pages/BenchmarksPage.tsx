@@ -61,8 +61,9 @@ const ErrorDisplay: React.FC<{
  * Displays all benchmarks and allows recording/editing results
  */
 export const BenchmarksPage: React.FC = () => {
-  const { athleteId } = useParams<{ athleteId: string }>();
-  const isValidAthleteId = !!athleteId && athleteId.length > 0;
+  const { athleteId: athleteIdParam } = useParams<{ athleteId: string }>();
+  const athleteId = athleteIdParam ? Number(athleteIdParam) : undefined;
+  const isValidAthleteId = athleteId !== undefined && !isNaN(athleteId) && athleteId > 0;
 
   // State
   const [categoryFilter, setCategoryFilter] = useState<FilterValue>('All');
@@ -186,7 +187,7 @@ export const BenchmarksPage: React.FC = () => {
       } else {
         // Create new
         await createBenchmark({
-          benchmarkDefinitionId: formData.benchmarkDefinitionId,
+          benchmarkDefinitionId: Number(formData.benchmarkDefinitionId),
           value: numericValue,
           recordedAt: formData.recordedAt,
           notes: formData.notes || null,

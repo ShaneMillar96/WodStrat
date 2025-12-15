@@ -6,7 +6,7 @@ import type { CreateAthleteRequest, UpdateAthleteRequest } from '../types';
 /**
  * Hook for fetching an athlete profile by ID
  */
-export function useAthleteQuery(id: string | undefined) {
+export function useAthleteQuery(id: number | undefined) {
   return useQuery({
     queryKey: queryKeys.athletes.detail(id!),
     queryFn: () => athleteService.getById(id!),
@@ -45,7 +45,7 @@ export function useUpdateAthleteMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: UpdateAthleteRequest }) =>
+    mutationFn: ({ id, data }: { id: number; data: UpdateAthleteRequest }) =>
       athleteService.update(id, data),
     onSuccess: (updatedAthlete) => {
       // Update the athlete in the cache
@@ -66,7 +66,7 @@ export function useDeleteAthleteMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: string) => athleteService.delete(id),
+    mutationFn: (id: number) => athleteService.delete(id),
     onSuccess: (_, id) => {
       // Remove the athlete from the cache
       queryClient.removeQueries({ queryKey: queryKeys.athletes.detail(id) });
@@ -80,7 +80,7 @@ export function useDeleteAthleteMutation() {
  * Combined hook for athlete profile operations
  * Provides query and mutation functions with unified state
  */
-export function useAthleteProfile(id?: string) {
+export function useAthleteProfile(id?: number) {
   const query = useAthleteQuery(id);
   const createMutation = useCreateAthleteMutation();
   const updateMutation = useUpdateAthleteMutation();

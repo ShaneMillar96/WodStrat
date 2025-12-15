@@ -6,7 +6,7 @@ import type { CreateBenchmarkRequest, UpdateBenchmarkRequest } from '../types';
 /**
  * Hook for creating a new benchmark result
  */
-export function useCreateBenchmarkMutation(athleteId: string) {
+export function useCreateBenchmarkMutation(athleteId: number) {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -27,7 +27,7 @@ export function useCreateBenchmarkMutation(athleteId: string) {
 /**
  * Hook for updating an existing benchmark result
  */
-export function useUpdateBenchmarkMutation(athleteId: string) {
+export function useUpdateBenchmarkMutation(athleteId: number) {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -35,7 +35,7 @@ export function useUpdateBenchmarkMutation(athleteId: string) {
       benchmarkId,
       data,
     }: {
-      benchmarkId: string;
+      benchmarkId: number;
       data: UpdateBenchmarkRequest;
     }) => benchmarkService.update(athleteId, benchmarkId, data),
     onSuccess: () => {
@@ -53,11 +53,11 @@ export function useUpdateBenchmarkMutation(athleteId: string) {
 /**
  * Hook for deleting a benchmark result
  */
-export function useDeleteBenchmarkMutation(athleteId: string) {
+export function useDeleteBenchmarkMutation(athleteId: number) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (benchmarkId: string) =>
+    mutationFn: (benchmarkId: number) =>
       benchmarkService.delete(athleteId, benchmarkId),
     onSuccess: () => {
       // Invalidate athlete benchmarks and summary queries
@@ -75,7 +75,7 @@ export function useDeleteBenchmarkMutation(athleteId: string) {
  * Combined hook for all benchmark mutations
  * Provides create, update, and delete operations with unified state
  */
-export function useBenchmarkMutations(athleteId: string) {
+export function useBenchmarkMutations(athleteId: number) {
   const createMutation = useCreateBenchmarkMutation(athleteId);
   const updateMutation = useUpdateBenchmarkMutation(athleteId);
   const deleteMutation = useDeleteBenchmarkMutation(athleteId);
@@ -91,7 +91,7 @@ export function useBenchmarkMutations(athleteId: string) {
   return {
     // Mutation functions
     createBenchmark: createMutation.mutateAsync,
-    updateBenchmark: (benchmarkId: string, data: UpdateBenchmarkRequest) =>
+    updateBenchmark: (benchmarkId: number, data: UpdateBenchmarkRequest) =>
       updateMutation.mutateAsync({ benchmarkId, data }),
     deleteBenchmark: deleteMutation.mutateAsync,
 

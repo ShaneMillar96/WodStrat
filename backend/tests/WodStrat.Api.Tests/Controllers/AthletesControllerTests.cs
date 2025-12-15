@@ -58,7 +58,7 @@ public class AthletesControllerTests
     public async Task GetById_InvalidId_ReturnsNotFound()
     {
         // Arrange
-        var invalidId = Guid.NewGuid();
+        var invalidId = 999;
         _athleteService.GetByIdAsync(invalidId, Arg.Any<CancellationToken>())
             .Returns((AthleteDto?)null);
 
@@ -73,11 +73,11 @@ public class AthletesControllerTests
     public async Task GetById_ServiceReturnsNull_ReturnsNotFound()
     {
         // Arrange
-        _athleteService.GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
+        _athleteService.GetByIdAsync(Arg.Any<int>(), Arg.Any<CancellationToken>())
             .Returns((AthleteDto?)null);
 
         // Act
-        var result = await _sut.GetById(Guid.NewGuid(), CancellationToken.None);
+        var result = await _sut.GetById(1, CancellationToken.None);
 
         // Assert
         result.Result.Should().BeOfType<NotFoundResult>();
@@ -249,7 +249,7 @@ public class AthletesControllerTests
     public async Task Update_ValidIdAndRequest_ReturnsOkWithUpdatedResponse()
     {
         // Arrange
-        var athleteId = Guid.NewGuid();
+        var athleteId = 1;
         var request = new UpdateAthleteRequest
         {
             Name = "Updated Name",
@@ -287,7 +287,7 @@ public class AthletesControllerTests
     public async Task Update_InvalidId_ReturnsNotFound()
     {
         // Arrange
-        var invalidId = Guid.NewGuid();
+        var invalidId = 999;
         var request = new UpdateAthleteRequest
         {
             Name = "Test",
@@ -309,7 +309,7 @@ public class AthletesControllerTests
     public async Task Update_CallsServiceWithCorrectIdAndMappedDto()
     {
         // Arrange
-        var athleteId = Guid.NewGuid();
+        var athleteId = 1;
         var request = new UpdateAthleteRequest
         {
             Name = "  Updated Name  ",
@@ -342,7 +342,7 @@ public class AthletesControllerTests
     public async Task Delete_ValidId_ReturnsNoContent()
     {
         // Arrange
-        var athleteId = Guid.NewGuid();
+        var athleteId = 1;
         _athleteService.DeleteAsync(athleteId, Arg.Any<CancellationToken>())
             .Returns(true);
 
@@ -357,7 +357,7 @@ public class AthletesControllerTests
     public async Task Delete_InvalidId_ReturnsNotFound()
     {
         // Arrange
-        var invalidId = Guid.NewGuid();
+        var invalidId = 999;
         _athleteService.DeleteAsync(invalidId, Arg.Any<CancellationToken>())
             .Returns(false);
 
@@ -372,11 +372,11 @@ public class AthletesControllerTests
     public async Task Delete_ServiceReturnsFalse_ReturnsNotFound()
     {
         // Arrange
-        _athleteService.DeleteAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
+        _athleteService.DeleteAsync(Arg.Any<int>(), Arg.Any<CancellationToken>())
             .Returns(false);
 
         // Act
-        var result = await _sut.Delete(Guid.NewGuid(), CancellationToken.None);
+        var result = await _sut.Delete(1, CancellationToken.None);
 
         // Assert
         result.Should().BeOfType<NotFoundResult>();
@@ -386,7 +386,7 @@ public class AthletesControllerTests
     public async Task Delete_CallsServiceWithCorrectId()
     {
         // Arrange
-        var athleteId = Guid.NewGuid();
+        var athleteId = 1;
         _athleteService.DeleteAsync(athleteId, Arg.Any<CancellationToken>())
             .Returns(true);
 

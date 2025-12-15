@@ -8,7 +8,7 @@ public class RecordBenchmarkDto
     /// <summary>
     /// Reference to the benchmark definition. Required.
     /// </summary>
-    public Guid BenchmarkDefinitionId { get; set; }
+    public int BenchmarkDefinitionId { get; set; }
 
     /// <summary>
     /// The benchmark value. Interpretation depends on metric type:

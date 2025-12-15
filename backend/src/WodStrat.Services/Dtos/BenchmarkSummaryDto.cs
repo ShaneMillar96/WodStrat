@@ -8,7 +8,7 @@ public class BenchmarkSummaryDto
     /// <summary>
     /// Reference to the athlete.
     /// </summary>
-    public Guid AthleteId { get; set; }
+    public int AthleteId { get; set; }
 
     /// <summary>
     /// Total number of recorded benchmarks.

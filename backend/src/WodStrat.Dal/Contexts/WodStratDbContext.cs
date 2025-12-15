@@ -35,13 +35,13 @@ public class WodStratDbContext : DbContext, IWodStratDatabase
         {
             entity.ToTable("athletes");
 
-            // Primary key
+            // Primary key (SERIAL INT - auto-generated)
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id)
                 .HasColumnName("id")
-                .HasDefaultValueSql("gen_random_uuid()");
+                .ValueGeneratedOnAdd();
 
-            // User relationship (future FK)
+            // User relationship (future FK - now INT)
             entity.Property(e => e.UserId)
                 .HasColumnName("user_id");
             entity.HasIndex(e => e.UserId)
@@ -106,11 +106,11 @@ public class WodStratDbContext : DbContext, IWodStratDatabase
         {
             entity.ToTable("benchmark_definitions");
 
-            // Primary key
+            // Primary key (SERIAL INT - auto-generated)
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id)
                 .HasColumnName("id")
-                .HasDefaultValueSql("gen_random_uuid()");
+                .ValueGeneratedOnAdd();
 
             // Benchmark identification
             entity.Property(e => e.Name)
@@ -177,13 +177,13 @@ public class WodStratDbContext : DbContext, IWodStratDatabase
         {
             entity.ToTable("athlete_benchmarks");
 
-            // Primary key
+            // Primary key (SERIAL INT - auto-generated)
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id)
                 .HasColumnName("id")
-                .HasDefaultValueSql("gen_random_uuid()");
+                .ValueGeneratedOnAdd();
 
-            // Foreign keys
+            // Foreign keys (now INT)
             entity.Property(e => e.AthleteId)
                 .HasColumnName("athlete_id")
                 .IsRequired();

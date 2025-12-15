@@ -11,7 +11,7 @@ export const athleteService = {
    * @param id - The athlete's unique identifier
    * @returns The athlete profile
    */
-  getById: async (id: string): Promise<Athlete> => {
+  getById: async (id: number): Promise<Athlete> => {
     return api.get<Athlete>(`/athletes/${id}`);
   },
 
@@ -30,7 +30,7 @@ export const athleteService = {
    * @param data - The athlete data to update
    * @returns The updated athlete profile
    */
-  update: async (id: string, data: UpdateAthleteRequest): Promise<Athlete> => {
+  update: async (id: number, data: UpdateAthleteRequest): Promise<Athlete> => {
     return api.put<Athlete, UpdateAthleteRequest>(`/athletes/${id}`, data);
   },
 
@@ -38,7 +38,7 @@ export const athleteService = {
    * Delete an athlete profile
    * @param id - The athlete's unique identifier
    */
-  delete: async (id: string): Promise<void> => {
+  delete: async (id: number): Promise<void> => {
     return api.delete(`/athletes/${id}`);
   },
 };

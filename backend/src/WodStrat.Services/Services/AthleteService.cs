@@ -20,7 +20,7 @@ public class AthleteService : IAthleteService
     }
 
     /// <inheritdoc />
-    public async Task<AthleteDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<AthleteDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         var athlete = await _database.Get<Athlete>()
             .Where(a => a.Id == id && !a.IsDeleted)
@@ -30,7 +30,7 @@ public class AthleteService : IAthleteService
     }
 
     /// <inheritdoc />
-    public async Task<AthleteDto?> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
+    public async Task<AthleteDto?> GetByUserIdAsync(int userId, CancellationToken cancellationToken = default)
     {
         var athlete = await _database.Get<Athlete>()
             .Where(a => a.UserId == userId && !a.IsDeleted)
@@ -51,7 +51,7 @@ public class AthleteService : IAthleteService
     }
 
     /// <inheritdoc />
-    public async Task<AthleteDto?> UpdateAsync(Guid id, UpdateAthleteDto dto, CancellationToken cancellationToken = default)
+    public async Task<AthleteDto?> UpdateAsync(int id, UpdateAthleteDto dto, CancellationToken cancellationToken = default)
     {
         var entity = await _database.Get<Athlete>()
             .Where(a => a.Id == id && !a.IsDeleted)
@@ -69,7 +69,7 @@ public class AthleteService : IAthleteService
     }
 
     /// <inheritdoc />
-    public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<bool> DeleteAsync(int id, CancellationToken cancellationToken = default)
     {
         var entity = await _database.Get<Athlete>()
             .Where(a => a.Id == id && !a.IsDeleted)

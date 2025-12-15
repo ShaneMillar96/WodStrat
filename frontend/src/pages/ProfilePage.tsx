@@ -85,10 +85,10 @@ const ErrorDisplay: React.FC<{
  * Handles both create and edit modes
  */
 export const ProfilePage: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+  const { id: idParam } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const athleteId = id;
-  const isEditMode = !!athleteId && athleteId !== 'new';
+  const athleteId = idParam && idParam !== 'new' ? Number(idParam) : undefined;
+  const isEditMode = athleteId !== undefined && !isNaN(athleteId);
 
   const {
     athlete,

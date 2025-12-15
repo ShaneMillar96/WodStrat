@@ -8,12 +8,12 @@ public class AthleteBenchmark : EntityBase
     /// <summary>
     /// Reference to the athlete who recorded this benchmark.
     /// </summary>
-    public Guid AthleteId { get; set; }
+    public int AthleteId { get; set; }
 
     /// <summary>
     /// Reference to the benchmark type.
     /// </summary>
-    public Guid BenchmarkDefinitionId { get; set; }
+    public int BenchmarkDefinitionId { get; set; }
 
     /// <summary>
     /// The benchmark result value (interpretation depends on metric_type).

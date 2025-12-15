@@ -15,7 +15,7 @@ public class AthleteCustomization : ICustomization
         fixture.Register(() => DateOnly.FromDateTime(DateTime.UtcNow.AddYears(-25)));
 
         fixture.Customize<Athlete>(c => c
-            .With(x => x.Id, Guid.NewGuid())
+            .With(x => x.Id, () => fixture.Create<int>())
             .With(x => x.Name, "Test Athlete")
             .With(x => x.DateOfBirth, DateOnly.FromDateTime(DateTime.UtcNow.AddYears(-25)))
             .With(x => x.Gender, "Male")

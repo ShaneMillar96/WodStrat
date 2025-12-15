@@ -25,7 +25,7 @@ export const benchmarkService = {
    * @param athleteId - The athlete's unique identifier
    * @returns List of athlete's benchmark results
    */
-  getAthleteBenchmarks: async (athleteId: string): Promise<AthleteBenchmark[]> => {
+  getAthleteBenchmarks: async (athleteId: number): Promise<AthleteBenchmark[]> => {
     return api.get<AthleteBenchmark[]>(`/athletes/${athleteId}/benchmarks`);
   },
 
@@ -34,7 +34,7 @@ export const benchmarkService = {
    * @param athleteId - The athlete's unique identifier
    * @returns Summary with completion stats and all benchmarks
    */
-  getSummary: async (athleteId: string): Promise<BenchmarkSummary> => {
+  getSummary: async (athleteId: number): Promise<BenchmarkSummary> => {
     return api.get<BenchmarkSummary>(`/athletes/${athleteId}/benchmarks/summary`);
   },
 
@@ -45,7 +45,7 @@ export const benchmarkService = {
    * @returns The created benchmark result
    */
   create: async (
-    athleteId: string,
+    athleteId: number,
     data: CreateBenchmarkRequest
   ): Promise<AthleteBenchmark> => {
     return api.post<AthleteBenchmark, CreateBenchmarkRequest>(
@@ -62,8 +62,8 @@ export const benchmarkService = {
    * @returns The updated benchmark result
    */
   update: async (
-    athleteId: string,
-    benchmarkId: string,
+    athleteId: number,
+    benchmarkId: number,
     data: UpdateBenchmarkRequest
   ): Promise<AthleteBenchmark> => {
     return api.put<AthleteBenchmark, UpdateBenchmarkRequest>(
@@ -77,7 +77,7 @@ export const benchmarkService = {
    * @param athleteId - The athlete's unique identifier
    * @param benchmarkId - The benchmark result's unique identifier
    */
-  delete: async (athleteId: string, benchmarkId: string): Promise<void> => {
+  delete: async (athleteId: number, benchmarkId: number): Promise<void> => {
     return api.delete(`/athletes/${athleteId}/benchmarks/${benchmarkId}`);
   },
 };

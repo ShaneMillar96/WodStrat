@@ -43,7 +43,7 @@ public interface IBenchmarkService
     /// <param name="athleteId">The athlete's unique identifier.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>List of athlete's benchmark results with definition details.</returns>
-    Task<IReadOnlyList<AthleteBenchmarkDto>> GetAthleteBenchmarksAsync(Guid athleteId, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<AthleteBenchmarkDto>> GetAthleteBenchmarksAsync(int athleteId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Retrieves a specific benchmark for an athlete by benchmark ID.
@@ -52,7 +52,7 @@ public interface IBenchmarkService
     /// <param name="benchmarkId">The athlete benchmark's unique identifier.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The athlete benchmark if found and belongs to athlete; otherwise null.</returns>
-    Task<AthleteBenchmarkDto?> GetAthleteBenchmarkByIdAsync(Guid athleteId, Guid benchmarkId, CancellationToken cancellationToken = default);
+    Task<AthleteBenchmarkDto?> GetAthleteBenchmarkByIdAsync(int athleteId, int benchmarkId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Retrieves a benchmark summary for an athlete including completeness stats.
@@ -60,7 +60,7 @@ public interface IBenchmarkService
     /// <param name="athleteId">The athlete's unique identifier.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Summary with benchmark count and minimum requirement check.</returns>
-    Task<BenchmarkSummaryDto> GetBenchmarkSummaryAsync(Guid athleteId, CancellationToken cancellationToken = default);
+    Task<BenchmarkSummaryDto> GetBenchmarkSummaryAsync(int athleteId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Records a new benchmark for an athlete. Returns duplicate flag if already exists.
@@ -69,7 +69,7 @@ public interface IBenchmarkService
     /// <param name="dto">The benchmark data to record.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Tuple containing the created benchmark (or null if duplicate) and duplicate flag.</returns>
-    Task<(AthleteBenchmarkDto? Result, bool IsDuplicate)> RecordBenchmarkAsync(Guid athleteId, RecordBenchmarkDto dto, CancellationToken cancellationToken = default);
+    Task<(AthleteBenchmarkDto? Result, bool IsDuplicate)> RecordBenchmarkAsync(int athleteId, RecordBenchmarkDto dto, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Updates an existing athlete benchmark value.
@@ -79,7 +79,7 @@ public interface IBenchmarkService
     /// <param name="dto">The updated benchmark data.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The updated athlete benchmark if found; otherwise null.</returns>
-    Task<AthleteBenchmarkDto?> UpdateBenchmarkAsync(Guid athleteId, Guid benchmarkId, UpdateBenchmarkDto dto, CancellationToken cancellationToken = default);
+    Task<AthleteBenchmarkDto?> UpdateBenchmarkAsync(int athleteId, int benchmarkId, UpdateBenchmarkDto dto, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Soft deletes an athlete benchmark.
@@ -88,7 +88,7 @@ public interface IBenchmarkService
     /// <param name="benchmarkId">The athlete benchmark's unique identifier.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>True if the benchmark was found and deleted; otherwise false.</returns>
-    Task<bool> DeleteBenchmarkAsync(Guid athleteId, Guid benchmarkId, CancellationToken cancellationToken = default);
+    Task<bool> DeleteBenchmarkAsync(int athleteId, int benchmarkId, CancellationToken cancellationToken = default);
 
     #endregion
 }

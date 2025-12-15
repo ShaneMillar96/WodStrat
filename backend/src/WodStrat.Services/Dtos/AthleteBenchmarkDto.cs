@@ -9,17 +9,17 @@ public class AthleteBenchmarkDto
     /// <summary>
     /// Unique identifier for the athlete benchmark.
     /// </summary>
-    public Guid Id { get; set; }
+    public int Id { get; set; }
 
     /// <summary>
     /// Reference to the athlete who recorded this benchmark.
     /// </summary>
-    public Guid AthleteId { get; set; }
+    public int AthleteId { get; set; }
 
     /// <summary>
     /// Reference to the benchmark definition.
     /// </summary>
-    public Guid BenchmarkDefinitionId { get; set; }
+    public int BenchmarkDefinitionId { get; set; }
 
     /// <summary>
     /// Display name of the benchmark (denormalized for convenience).

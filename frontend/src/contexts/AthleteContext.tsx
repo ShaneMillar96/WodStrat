@@ -1,8 +1,8 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
 
 interface AthleteContextValue {
-  athleteId: string | null;
-  setAthleteId: (id: string | null) => void;
+  athleteId: number | null;
+  setAthleteId: (id: number | null) => void;
   clearAthlete: () => void;
   hasAthlete: boolean;
 }
@@ -14,14 +14,17 @@ const AthleteContext = createContext<AthleteContextValue | undefined>(undefined)
 export const AthleteProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [athleteId, setAthleteIdState] = useState<string | null>(() => {
-    return localStorage.getItem(STORAGE_KEY);
+  const [athleteId, setAthleteIdState] = useState<number | null>(() => {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored === null) return null;
+    const parsed = Number(stored);
+    return isNaN(parsed) ? null : parsed;
   });
 
-  const setAthleteId = useCallback((id: string | null) => {
+  const setAthleteId = useCallback((id: number | null) => {
     setAthleteIdState(id);
     if (id !== null) {
-      localStorage.setItem(STORAGE_KEY, id);
+      localStorage.setItem(STORAGE_KEY, String(id));
     } else {
       localStorage.removeItem(STORAGE_KEY);
     }

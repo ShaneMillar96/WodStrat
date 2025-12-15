@@ -13,7 +13,7 @@ public interface IAthleteService
     /// <param name="id">The athlete's unique identifier.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The athlete DTO if found and not deleted; otherwise null.</returns>
-    Task<AthleteDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<AthleteDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Retrieves an athlete profile by user ID (for authenticated user lookup).
@@ -21,7 +21,7 @@ public interface IAthleteService
     /// <param name="userId">The user's unique identifier.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The athlete DTO if found and not deleted; otherwise null.</returns>
-    Task<AthleteDto?> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default);
+    Task<AthleteDto?> GetByUserIdAsync(int userId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Creates a new athlete profile.
@@ -38,7 +38,7 @@ public interface IAthleteService
     /// <param name="dto">The athlete update data.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The updated athlete DTO if found; otherwise null.</returns>
-    Task<AthleteDto?> UpdateAsync(Guid id, UpdateAthleteDto dto, CancellationToken cancellationToken = default);
+    Task<AthleteDto?> UpdateAsync(int id, UpdateAthleteDto dto, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Soft deletes an athlete profile.
@@ -46,5 +46,5 @@ public interface IAthleteService
     /// <param name="id">The athlete's unique identifier.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>True if the athlete was found and deleted; otherwise false.</returns>
-    Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<bool> DeleteAsync(int id, CancellationToken cancellationToken = default);
 }

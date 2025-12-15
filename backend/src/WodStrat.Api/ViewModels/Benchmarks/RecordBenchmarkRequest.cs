@@ -8,8 +8,8 @@ public class RecordBenchmarkRequest
     /// <summary>
     /// The benchmark definition to record a result for.
     /// </summary>
-    /// <example>3fa85f64-5717-4562-b3fc-2c963f66afa6</example>
-    public Guid BenchmarkDefinitionId { get; set; }
+    /// <example>5</example>
+    public int BenchmarkDefinitionId { get; set; }
 
     /// <summary>
     /// The benchmark value. Interpretation depends on the benchmark's metric type:

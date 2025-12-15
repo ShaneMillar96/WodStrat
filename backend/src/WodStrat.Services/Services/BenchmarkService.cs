@@ -67,7 +67,7 @@ public class BenchmarkService : IBenchmarkService
     #region Athlete Benchmarks
 
     /// <inheritdoc />
-    public async Task<IReadOnlyList<AthleteBenchmarkDto>> GetAthleteBenchmarksAsync(Guid athleteId, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<AthleteBenchmarkDto>> GetAthleteBenchmarksAsync(int athleteId, CancellationToken cancellationToken = default)
     {
         var benchmarks = await _database.Get<AthleteBenchmark>()
             .Include(ab => ab.BenchmarkDefinition)
@@ -81,7 +81,7 @@ public class BenchmarkService : IBenchmarkService
     }
 
     /// <inheritdoc />
-    public async Task<AthleteBenchmarkDto?> GetAthleteBenchmarkByIdAsync(Guid athleteId, Guid benchmarkId, CancellationToken cancellationToken = default)
+    public async Task<AthleteBenchmarkDto?> GetAthleteBenchmarkByIdAsync(int athleteId, int benchmarkId, CancellationToken cancellationToken = default)
     {
         var benchmark = await _database.Get<AthleteBenchmark>()
             .Include(ab => ab.BenchmarkDefinition)
@@ -92,7 +92,7 @@ public class BenchmarkService : IBenchmarkService
     }
 
     /// <inheritdoc />
-    public async Task<BenchmarkSummaryDto> GetBenchmarkSummaryAsync(Guid athleteId, CancellationToken cancellationToken = default)
+    public async Task<BenchmarkSummaryDto> GetBenchmarkSummaryAsync(int athleteId, CancellationToken cancellationToken = default)
     {
         var benchmarks = await GetAthleteBenchmarksAsync(athleteId, cancellationToken);
 
@@ -112,7 +112,7 @@ public class BenchmarkService : IBenchmarkService
     }
 
     /// <inheritdoc />
-    public async Task<(AthleteBenchmarkDto? Result, bool IsDuplicate)> RecordBenchmarkAsync(Guid athleteId, RecordBenchmarkDto dto, CancellationToken cancellationToken = default)
+    public async Task<(AthleteBenchmarkDto? Result, bool IsDuplicate)> RecordBenchmarkAsync(int athleteId, RecordBenchmarkDto dto, CancellationToken cancellationToken = default)
     {
         // Check for existing benchmark (duplicate check)
         var existingBenchmark = await _database.Get<AthleteBenchmark>()
@@ -142,7 +142,7 @@ public class BenchmarkService : IBenchmarkService
     }
 
     /// <inheritdoc />
-    public async Task<AthleteBenchmarkDto?> UpdateBenchmarkAsync(Guid athleteId, Guid benchmarkId, UpdateBenchmarkDto dto, CancellationToken cancellationToken = default)
+    public async Task<AthleteBenchmarkDto?> UpdateBenchmarkAsync(int athleteId, int benchmarkId, UpdateBenchmarkDto dto, CancellationToken cancellationToken = default)
     {
         var entity = await _database.Get<AthleteBenchmark>()
             .Include(ab => ab.BenchmarkDefinition)
@@ -163,7 +163,7 @@ public class BenchmarkService : IBenchmarkService
     }
 
     /// <inheritdoc />
-    public async Task<bool> DeleteBenchmarkAsync(Guid athleteId, Guid benchmarkId, CancellationToken cancellationToken = default)
+    public async Task<bool> DeleteBenchmarkAsync(int athleteId, int benchmarkId, CancellationToken cancellationToken = default)
     {
         var entity = await _database.Get<AthleteBenchmark>()
             .Where(ab => ab.Id == benchmarkId && ab.AthleteId == athleteId && !ab.IsDeleted)

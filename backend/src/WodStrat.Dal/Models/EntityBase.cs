@@ -6,9 +6,9 @@ namespace WodStrat.Dal.Models;
 public abstract class EntityBase
 {
     /// <summary>
-    /// Unique identifier for the entity.
+    /// Unique auto-incrementing identifier for the entity.
     /// </summary>
-    public Guid Id { get; set; }
+    public int Id { get; set; }
 
     /// <summary>
     /// Indicates whether this entity has been soft-deleted.

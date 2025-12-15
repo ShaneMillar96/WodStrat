@@ -16,7 +16,7 @@ public class BenchmarkCustomization : ICustomization
 
         // Customize Athlete to avoid circular references with Benchmarks navigation
         fixture.Customize<Athlete>(c => c
-            .With(x => x.Id, Guid.NewGuid())
+            .With(x => x.Id, () => fixture.Create<int>())
             .With(x => x.Name, "Test Athlete")
             .With(x => x.DateOfBirth, DateOnly.FromDateTime(DateTime.UtcNow.AddYears(-25)))
             .With(x => x.Gender, "Male")
@@ -31,7 +31,7 @@ public class BenchmarkCustomization : ICustomization
 
         // Customize BenchmarkDefinition to avoid circular references
         fixture.Customize<BenchmarkDefinition>(c => c
-            .With(x => x.Id, Guid.NewGuid())
+            .With(x => x.Id, () => fixture.Create<int>())
             .With(x => x.Name, "500m Row")
             .With(x => x.Slug, "500m-row")
             .With(x => x.Description, "500 meter row for time")
@@ -45,9 +45,9 @@ public class BenchmarkCustomization : ICustomization
 
         // Customize AthleteBenchmark to avoid circular references
         fixture.Customize<AthleteBenchmark>(c => c
-            .With(x => x.Id, Guid.NewGuid())
-            .With(x => x.AthleteId, Guid.NewGuid())
-            .With(x => x.BenchmarkDefinitionId, Guid.NewGuid())
+            .With(x => x.Id, () => fixture.Create<int>())
+            .With(x => x.AthleteId, () => fixture.Create<int>())
+            .With(x => x.BenchmarkDefinitionId, () => fixture.Create<int>())
             .With(x => x.Value, 195.5m) // 3:15.5 in seconds
             .With(x => x.RecordedAt, DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-7)))
             .With(x => x.Notes, (string?)null)

@@ -11,7 +11,7 @@ import { useBenchmarkDefinitions } from './useBenchmarkDefinitions';
 /**
  * Hook for fetching athlete benchmarks
  */
-export function useAthleteBenchmarksQuery(athleteId: string | undefined) {
+export function useAthleteBenchmarksQuery(athleteId: number | undefined) {
   return useQuery({
     queryKey: queryKeys.benchmarks.athleteBenchmarks(athleteId!),
     queryFn: () => benchmarkService.getAthleteBenchmarks(athleteId!),
@@ -28,7 +28,7 @@ export function useAthleteBenchmarksQuery(athleteId: string | undefined) {
 /**
  * Hook for fetching benchmark summary
  */
-export function useBenchmarkSummaryQuery(athleteId: string | undefined) {
+export function useBenchmarkSummaryQuery(athleteId: number | undefined) {
   return useQuery({
     queryKey: queryKeys.benchmarks.summary(athleteId!),
     queryFn: () => benchmarkService.getSummary(athleteId!),
@@ -47,7 +47,7 @@ export function useBenchmarkSummaryQuery(athleteId: string | undefined) {
  * Provides merged view of definitions with athlete's recorded values
  */
 export function useAthleteBenchmarks(
-  athleteId: string | undefined,
+  athleteId: number | undefined,
   categoryFilter?: BenchmarkCategory | 'All'
 ) {
   const { allDefinitions, isLoading: definitionsLoading, error: definitionsError } =
@@ -56,7 +56,7 @@ export function useAthleteBenchmarks(
   const summaryQuery = useBenchmarkSummaryQuery(athleteId);
 
   // Create a map of benchmark definition ID to athlete benchmark
-  const benchmarkMap = new Map<string, AthleteBenchmark>();
+  const benchmarkMap = new Map<number, AthleteBenchmark>();
   (benchmarksQuery.data ?? []).forEach((benchmark) => {
     benchmarkMap.set(benchmark.benchmarkDefinitionId, benchmark);
   });
@@ -106,11 +106,11 @@ export function useAthleteBenchmarks(
       | null,
 
     // Helper to get benchmark by definition ID
-    getBenchmarkByDefinitionId: (definitionId: string) =>
+    getBenchmarkByDefinitionId: (definitionId: number) =>
       benchmarkMap.get(definitionId) ?? null,
 
     // Helper to check if a benchmark has been recorded
-    hasBenchmarkForDefinition: (definitionId: string) =>
+    hasBenchmarkForDefinition: (definitionId: number) =>
       benchmarkMap.has(definitionId),
 
     // Refetch functions

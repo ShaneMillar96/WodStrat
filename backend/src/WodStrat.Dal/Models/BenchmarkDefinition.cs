@@ -8,9 +8,9 @@ namespace WodStrat.Dal.Models;
 public class BenchmarkDefinition
 {
     /// <summary>
-    /// Unique identifier for the benchmark definition.
+    /// Unique auto-incrementing identifier for the benchmark definition.
     /// </summary>
-    public Guid Id { get; set; }
+    public int Id { get; set; }
 
     /// <summary>
     /// Display name of the benchmark (e.g., "Fran", "Back Squat 1RM").

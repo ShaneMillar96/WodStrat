@@ -8,7 +8,7 @@ public class AthleteDto
     /// <summary>
     /// Unique identifier for the athlete.
     /// </summary>
-    public Guid Id { get; set; }
+    public int Id { get; set; }
 
     /// <summary>
     /// Athlete's display name.

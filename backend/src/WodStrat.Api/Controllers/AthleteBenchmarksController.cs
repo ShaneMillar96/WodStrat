@@ -9,7 +9,7 @@ namespace WodStrat.Api.Controllers;
 /// API endpoints for athlete benchmark management.
 /// </summary>
 [ApiController]
-[Route("api/athletes/{athleteId:guid}/benchmarks")]
+[Route("api/athletes/{athleteId:int}/benchmarks")]
 [Produces("application/json")]
 [Tags("Athlete Benchmarks")]
 public class AthleteBenchmarksController : ControllerBase
@@ -37,7 +37,7 @@ public class AthleteBenchmarksController : ControllerBase
     [ProducesResponseType(typeof(IEnumerable<AthleteBenchmarkResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<IEnumerable<AthleteBenchmarkResponse>>> GetByAthlete(
-        Guid athleteId,
+        int athleteId,
         CancellationToken ct)
     {
         var athlete = await _athleteService.GetByIdAsync(athleteId, ct);
@@ -63,7 +63,7 @@ public class AthleteBenchmarksController : ControllerBase
     [ProducesResponseType(typeof(BenchmarkSummaryResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<BenchmarkSummaryResponse>> GetSummary(
-        Guid athleteId,
+        int athleteId,
         CancellationToken ct)
     {
         var athlete = await _athleteService.GetByIdAsync(athleteId, ct);
@@ -85,12 +85,12 @@ public class AthleteBenchmarksController : ControllerBase
     /// <returns>The athlete benchmark.</returns>
     /// <response code="200">Returns the athlete benchmark.</response>
     /// <response code="404">Athlete or benchmark not found.</response>
-    [HttpGet("{benchmarkId:guid}")]
+    [HttpGet("{benchmarkId:int}")]
     [ProducesResponseType(typeof(AthleteBenchmarkResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<AthleteBenchmarkResponse>> GetById(
-        Guid athleteId,
-        Guid benchmarkId,
+        int athleteId,
+        int benchmarkId,
         CancellationToken ct)
     {
         var athlete = await _athleteService.GetByIdAsync(athleteId, ct);
@@ -125,7 +125,7 @@ public class AthleteBenchmarksController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<ActionResult<AthleteBenchmarkResponse>> Create(
-        Guid athleteId,
+        int athleteId,
         [FromBody] RecordBenchmarkRequest request,
         CancellationToken ct)
     {
@@ -172,13 +172,13 @@ public class AthleteBenchmarksController : ControllerBase
     /// <response code="200">Benchmark updated successfully.</response>
     /// <response code="400">Validation errors in request.</response>
     /// <response code="404">Athlete or benchmark not found.</response>
-    [HttpPut("{benchmarkId:guid}")]
+    [HttpPut("{benchmarkId:int}")]
     [ProducesResponseType(typeof(AthleteBenchmarkResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<AthleteBenchmarkResponse>> Update(
-        Guid athleteId,
-        Guid benchmarkId,
+        int athleteId,
+        int benchmarkId,
         [FromBody] UpdateBenchmarkRequest request,
         CancellationToken ct)
     {
@@ -208,12 +208,12 @@ public class AthleteBenchmarksController : ControllerBase
     /// <returns>No content on success.</returns>
     /// <response code="204">Benchmark deleted successfully.</response>
     /// <response code="404">Athlete or benchmark not found.</response>
-    [HttpDelete("{benchmarkId:guid}")]
+    [HttpDelete("{benchmarkId:int}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete(
-        Guid athleteId,
-        Guid benchmarkId,
+        int athleteId,
+        int benchmarkId,
         CancellationToken ct)
     {
         var athlete = await _athleteService.GetByIdAsync(athleteId, ct);

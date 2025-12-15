@@ -11,10 +11,8 @@ public class RecordBenchmarkRequestValidator : AbstractValidator<RecordBenchmark
     public RecordBenchmarkRequestValidator()
     {
         RuleFor(x => x.BenchmarkDefinitionId)
-            .NotEmpty()
-            .WithMessage("Benchmark definition ID is required.")
-            .NotEqual(Guid.Empty)
-            .WithMessage("Benchmark definition ID must be a valid GUID.");
+            .GreaterThan(0)
+            .WithMessage("Benchmark definition ID must be a positive integer.");
 
         RuleFor(x => x.Value)
             .GreaterThan(0)

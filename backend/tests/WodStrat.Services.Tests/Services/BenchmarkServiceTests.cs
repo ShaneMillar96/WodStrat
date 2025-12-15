@@ -307,7 +307,7 @@ public class BenchmarkServiceTests
     public async Task GetAthleteBenchmarksAsync_ValidAthleteId_ReturnsBenchmarks()
     {
         // Arrange
-        var athleteId = Guid.NewGuid();
+        var athleteId = _fixture.Create<int>();
         var definition = _fixture.Build<BenchmarkDefinition>()
             .With(x => x.IsActive, true)
             .Create();
@@ -333,7 +333,7 @@ public class BenchmarkServiceTests
     public async Task GetAthleteBenchmarksAsync_ExcludesDeletedBenchmarks()
     {
         // Arrange
-        var athleteId = Guid.NewGuid();
+        var athleteId = _fixture.Create<int>();
         var definition = _fixture.Build<BenchmarkDefinition>()
             .With(x => x.IsActive, true)
             .Create();
@@ -367,7 +367,7 @@ public class BenchmarkServiceTests
         _database.Get<AthleteBenchmark>().Returns(queryable);
 
         // Act
-        var result = await _sut.GetAthleteBenchmarksAsync(Guid.NewGuid());
+        var result = await _sut.GetAthleteBenchmarksAsync(_fixture.Create<int>());
 
         // Assert
         result.Should().BeEmpty();
@@ -377,7 +377,7 @@ public class BenchmarkServiceTests
     public async Task GetAthleteBenchmarksAsync_IncludesFormattedValue()
     {
         // Arrange
-        var athleteId = Guid.NewGuid();
+        var athleteId = _fixture.Create<int>();
         var definition = _fixture.Build<BenchmarkDefinition>()
             .With(x => x.MetricType, BenchmarkMetricType.Time)
             .With(x => x.Unit, "seconds")
@@ -407,8 +407,8 @@ public class BenchmarkServiceTests
     public async Task GetAthleteBenchmarkByIdAsync_ValidIds_ReturnsBenchmark()
     {
         // Arrange
-        var athleteId = Guid.NewGuid();
-        var benchmarkId = Guid.NewGuid();
+        var athleteId = _fixture.Create<int>();
+        var benchmarkId = _fixture.Create<int>();
         var definition = _fixture.Create<BenchmarkDefinition>();
         var benchmark = _fixture.Build<AthleteBenchmark>()
             .With(x => x.Id, benchmarkId)
@@ -436,7 +436,7 @@ public class BenchmarkServiceTests
         _database.Get<AthleteBenchmark>().Returns(queryable);
 
         // Act
-        var result = await _sut.GetAthleteBenchmarkByIdAsync(Guid.NewGuid(), Guid.NewGuid());
+        var result = await _sut.GetAthleteBenchmarkByIdAsync(_fixture.Create<int>(), _fixture.Create<int>());
 
         // Assert
         result.Should().BeNull();
@@ -446,11 +446,11 @@ public class BenchmarkServiceTests
     public async Task GetAthleteBenchmarkByIdAsync_WrongAthleteId_ReturnsNull()
     {
         // Arrange
-        var benchmarkId = Guid.NewGuid();
+        var benchmarkId = _fixture.Create<int>();
         var definition = _fixture.Create<BenchmarkDefinition>();
         var benchmark = _fixture.Build<AthleteBenchmark>()
             .With(x => x.Id, benchmarkId)
-            .With(x => x.AthleteId, Guid.NewGuid()) // Different athlete
+            .With(x => x.AthleteId, _fixture.Create<int>()) // Different athlete
             .With(x => x.IsDeleted, false)
             .With(x => x.BenchmarkDefinition, definition)
             .Create();
@@ -459,7 +459,7 @@ public class BenchmarkServiceTests
         _database.Get<AthleteBenchmark>().Returns(queryable);
 
         // Act
-        var result = await _sut.GetAthleteBenchmarkByIdAsync(Guid.NewGuid(), benchmarkId);
+        var result = await _sut.GetAthleteBenchmarkByIdAsync(_fixture.Create<int>(), benchmarkId);
 
         // Assert
         result.Should().BeNull();
@@ -469,8 +469,8 @@ public class BenchmarkServiceTests
     public async Task GetAthleteBenchmarkByIdAsync_DeletedBenchmark_ReturnsNull()
     {
         // Arrange
-        var athleteId = Guid.NewGuid();
-        var benchmarkId = Guid.NewGuid();
+        var athleteId = _fixture.Create<int>();
+        var benchmarkId = _fixture.Create<int>();
         var definition = _fixture.Create<BenchmarkDefinition>();
         var benchmark = _fixture.Build<AthleteBenchmark>()
             .With(x => x.Id, benchmarkId)
@@ -497,7 +497,7 @@ public class BenchmarkServiceTests
     public async Task GetBenchmarkSummaryAsync_ReturnsSummaryWithCorrectTotalCount()
     {
         // Arrange
-        var athleteId = Guid.NewGuid();
+        var athleteId = _fixture.Create<int>();
         var definition = _fixture.Create<BenchmarkDefinition>();
         var benchmarks = Enumerable.Range(0, 5)
             .Select(_ => _fixture.Build<AthleteBenchmark>()
@@ -522,7 +522,7 @@ public class BenchmarkServiceTests
     public async Task GetBenchmarkSummaryAsync_MeetsMinimumRequirement_WhenThreeOrMoreBenchmarks()
     {
         // Arrange
-        var athleteId = Guid.NewGuid();
+        var athleteId = _fixture.Create<int>();
         var definition = _fixture.Create<BenchmarkDefinition>();
         var benchmarks = Enumerable.Range(0, 3)
             .Select(_ => _fixture.Build<AthleteBenchmark>()
@@ -547,7 +547,7 @@ public class BenchmarkServiceTests
     public async Task GetBenchmarkSummaryAsync_DoesNotMeetMinimumRequirement_WhenFewerThanThreeBenchmarks()
     {
         // Arrange
-        var athleteId = Guid.NewGuid();
+        var athleteId = _fixture.Create<int>();
         var definition = _fixture.Create<BenchmarkDefinition>();
         var benchmarks = Enumerable.Range(0, 2)
             .Select(_ => _fixture.Build<AthleteBenchmark>()
@@ -571,7 +571,7 @@ public class BenchmarkServiceTests
     public async Task GetBenchmarkSummaryAsync_GroupsBenchmarksByCategory()
     {
         // Arrange
-        var athleteId = Guid.NewGuid();
+        var athleteId = _fixture.Create<int>();
         var cardioDefinition = _fixture.Build<BenchmarkDefinition>()
             .With(x => x.Category, BenchmarkCategory.Cardio)
             .Create();
@@ -615,7 +615,7 @@ public class BenchmarkServiceTests
     public async Task GetBenchmarkSummaryAsync_IncludesBenchmarkDetails()
     {
         // Arrange
-        var athleteId = Guid.NewGuid();
+        var athleteId = _fixture.Create<int>();
         var definition = _fixture.Create<BenchmarkDefinition>();
         var benchmark = _fixture.Build<AthleteBenchmark>()
             .With(x => x.AthleteId, athleteId)
@@ -642,8 +642,8 @@ public class BenchmarkServiceTests
     public async Task RecordBenchmarkAsync_NewBenchmark_ReturnsCreatedBenchmark()
     {
         // Arrange
-        var athleteId = Guid.NewGuid();
-        var definitionId = Guid.NewGuid();
+        var athleteId = _fixture.Create<int>();
+        var definitionId = _fixture.Create<int>();
         var dto = new RecordBenchmarkDto
         {
             BenchmarkDefinitionId = definitionId,
@@ -696,8 +696,8 @@ public class BenchmarkServiceTests
     public async Task RecordBenchmarkAsync_DuplicateBenchmark_ReturnsDuplicateFlag()
     {
         // Arrange
-        var athleteId = Guid.NewGuid();
-        var definitionId = Guid.NewGuid();
+        var athleteId = _fixture.Create<int>();
+        var definitionId = _fixture.Create<int>();
         var dto = new RecordBenchmarkDto
         {
             BenchmarkDefinitionId = definitionId,
@@ -726,8 +726,8 @@ public class BenchmarkServiceTests
     public async Task RecordBenchmarkAsync_DeletedExistingBenchmark_AllowsNewRecord()
     {
         // Arrange
-        var athleteId = Guid.NewGuid();
-        var definitionId = Guid.NewGuid();
+        var athleteId = _fixture.Create<int>();
+        var definitionId = _fixture.Create<int>();
         var dto = new RecordBenchmarkDto
         {
             BenchmarkDefinitionId = definitionId,
@@ -772,10 +772,10 @@ public class BenchmarkServiceTests
     public async Task RecordBenchmarkAsync_NoRecordedAt_DefaultsToToday()
     {
         // Arrange
-        var athleteId = Guid.NewGuid();
+        var athleteId = _fixture.Create<int>();
         var dto = new RecordBenchmarkDto
         {
-            BenchmarkDefinitionId = Guid.NewGuid(),
+            BenchmarkDefinitionId = _fixture.Create<int>(),
             Value = 195.5m,
             RecordedAt = null // No date provided
         };
@@ -799,10 +799,10 @@ public class BenchmarkServiceTests
     public async Task RecordBenchmarkAsync_SetsTimestamps()
     {
         // Arrange
-        var athleteId = Guid.NewGuid();
+        var athleteId = _fixture.Create<int>();
         var dto = new RecordBenchmarkDto
         {
-            BenchmarkDefinitionId = Guid.NewGuid(),
+            BenchmarkDefinitionId = _fixture.Create<int>(),
             Value = 195.5m
         };
 
@@ -835,8 +835,8 @@ public class BenchmarkServiceTests
     public async Task UpdateBenchmarkAsync_ValidIds_ReturnsUpdatedBenchmark()
     {
         // Arrange
-        var athleteId = Guid.NewGuid();
-        var benchmarkId = Guid.NewGuid();
+        var athleteId = _fixture.Create<int>();
+        var benchmarkId = _fixture.Create<int>();
         var definition = _fixture.Create<BenchmarkDefinition>();
         var existingBenchmark = _fixture.Build<AthleteBenchmark>()
             .With(x => x.Id, benchmarkId)
@@ -878,7 +878,7 @@ public class BenchmarkServiceTests
         var dto = new UpdateBenchmarkDto { Value = 180m };
 
         // Act
-        var result = await _sut.UpdateBenchmarkAsync(Guid.NewGuid(), Guid.NewGuid(), dto);
+        var result = await _sut.UpdateBenchmarkAsync(_fixture.Create<int>(), _fixture.Create<int>(), dto);
 
         // Assert
         result.Should().BeNull();
@@ -889,11 +889,11 @@ public class BenchmarkServiceTests
     public async Task UpdateBenchmarkAsync_WrongAthleteId_ReturnsNull()
     {
         // Arrange
-        var benchmarkId = Guid.NewGuid();
+        var benchmarkId = _fixture.Create<int>();
         var definition = _fixture.Create<BenchmarkDefinition>();
         var existingBenchmark = _fixture.Build<AthleteBenchmark>()
             .With(x => x.Id, benchmarkId)
-            .With(x => x.AthleteId, Guid.NewGuid()) // Different athlete
+            .With(x => x.AthleteId, _fixture.Create<int>()) // Different athlete
             .With(x => x.IsDeleted, false)
             .With(x => x.BenchmarkDefinition, definition)
             .Create();
@@ -904,7 +904,7 @@ public class BenchmarkServiceTests
         var dto = new UpdateBenchmarkDto { Value = 180m };
 
         // Act
-        var result = await _sut.UpdateBenchmarkAsync(Guid.NewGuid(), benchmarkId, dto);
+        var result = await _sut.UpdateBenchmarkAsync(_fixture.Create<int>(), benchmarkId, dto);
 
         // Assert
         result.Should().BeNull();
@@ -915,8 +915,8 @@ public class BenchmarkServiceTests
     public async Task UpdateBenchmarkAsync_DeletedBenchmark_ReturnsNull()
     {
         // Arrange
-        var athleteId = Guid.NewGuid();
-        var benchmarkId = Guid.NewGuid();
+        var athleteId = _fixture.Create<int>();
+        var benchmarkId = _fixture.Create<int>();
         var definition = _fixture.Create<BenchmarkDefinition>();
         var existingBenchmark = _fixture.Build<AthleteBenchmark>()
             .With(x => x.Id, benchmarkId)
@@ -942,8 +942,8 @@ public class BenchmarkServiceTests
     public async Task UpdateBenchmarkAsync_UpdatesUpdatedAtTimestamp()
     {
         // Arrange
-        var athleteId = Guid.NewGuid();
-        var benchmarkId = Guid.NewGuid();
+        var athleteId = _fixture.Create<int>();
+        var benchmarkId = _fixture.Create<int>();
         var originalUpdatedAt = DateTime.UtcNow.AddDays(-7);
         var definition = _fixture.Create<BenchmarkDefinition>();
         var existingBenchmark = _fixture.Build<AthleteBenchmark>()
@@ -970,8 +970,8 @@ public class BenchmarkServiceTests
     public async Task UpdateBenchmarkAsync_OnlyRecordedAtProvided_UpdatesOnlyRecordedAt()
     {
         // Arrange
-        var athleteId = Guid.NewGuid();
-        var benchmarkId = Guid.NewGuid();
+        var athleteId = _fixture.Create<int>();
+        var benchmarkId = _fixture.Create<int>();
         var originalValue = 200m;
         var originalNotes = "Original notes";
         var definition = _fixture.Create<BenchmarkDefinition>();
@@ -1012,8 +1012,8 @@ public class BenchmarkServiceTests
     public async Task DeleteBenchmarkAsync_ValidIds_ReturnsTrueAndSoftDeletes()
     {
         // Arrange
-        var athleteId = Guid.NewGuid();
-        var benchmarkId = Guid.NewGuid();
+        var athleteId = _fixture.Create<int>();
+        var benchmarkId = _fixture.Create<int>();
         var existingBenchmark = _fixture.Build<AthleteBenchmark>()
             .With(x => x.Id, benchmarkId)
             .With(x => x.AthleteId, athleteId)
@@ -1042,7 +1042,7 @@ public class BenchmarkServiceTests
         _database.Get<AthleteBenchmark>().Returns(queryable);
 
         // Act
-        var result = await _sut.DeleteBenchmarkAsync(Guid.NewGuid(), Guid.NewGuid());
+        var result = await _sut.DeleteBenchmarkAsync(_fixture.Create<int>(), _fixture.Create<int>());
 
         // Assert
         result.Should().BeFalse();
@@ -1053,10 +1053,10 @@ public class BenchmarkServiceTests
     public async Task DeleteBenchmarkAsync_WrongAthleteId_ReturnsFalse()
     {
         // Arrange
-        var benchmarkId = Guid.NewGuid();
+        var benchmarkId = _fixture.Create<int>();
         var existingBenchmark = _fixture.Build<AthleteBenchmark>()
             .With(x => x.Id, benchmarkId)
-            .With(x => x.AthleteId, Guid.NewGuid()) // Different athlete
+            .With(x => x.AthleteId, _fixture.Create<int>()) // Different athlete
             .With(x => x.IsDeleted, false)
             .Create();
 
@@ -1064,7 +1064,7 @@ public class BenchmarkServiceTests
         _database.Get<AthleteBenchmark>().Returns(queryable);
 
         // Act
-        var result = await _sut.DeleteBenchmarkAsync(Guid.NewGuid(), benchmarkId);
+        var result = await _sut.DeleteBenchmarkAsync(_fixture.Create<int>(), benchmarkId);
 
         // Assert
         result.Should().BeFalse();
@@ -1075,8 +1075,8 @@ public class BenchmarkServiceTests
     public async Task DeleteBenchmarkAsync_AlreadyDeleted_ReturnsFalse()
     {
         // Arrange
-        var athleteId = Guid.NewGuid();
-        var benchmarkId = Guid.NewGuid();
+        var athleteId = _fixture.Create<int>();
+        var benchmarkId = _fixture.Create<int>();
         var existingBenchmark = _fixture.Build<AthleteBenchmark>()
             .With(x => x.Id, benchmarkId)
             .With(x => x.AthleteId, athleteId)
@@ -1098,8 +1098,8 @@ public class BenchmarkServiceTests
     public async Task DeleteBenchmarkAsync_UpdatesUpdatedAtTimestamp()
     {
         // Arrange
-        var athleteId = Guid.NewGuid();
-        var benchmarkId = Guid.NewGuid();
+        var athleteId = _fixture.Create<int>();
+        var benchmarkId = _fixture.Create<int>();
         var originalUpdatedAt = DateTime.UtcNow.AddDays(-7);
         var existingBenchmark = _fixture.Build<AthleteBenchmark>()
             .With(x => x.Id, benchmarkId)
