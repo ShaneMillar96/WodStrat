@@ -12,7 +12,7 @@ export const queryKeys = {
     list: (filters: Record<string, unknown>) =>
       [...queryKeys.athletes.lists(), filters] as const,
     details: () => [...queryKeys.athletes.all, 'detail'] as const,
-    detail: (id: number) => [...queryKeys.athletes.details(), id] as const,
+    detail: (id: string) => [...queryKeys.athletes.details(), id] as const,
   },
 
   /**

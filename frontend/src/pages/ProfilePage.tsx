@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ProfileForm } from '../components/forms/ProfileForm';
 import { Alert, Button } from '../components/ui';
 import { useAthleteProfile } from '../hooks';
+import { useAthleteContext } from '../contexts';
 import { ApiException } from '../services';
 import type {
   AthleteFormData,
@@ -86,8 +87,8 @@ const ErrorDisplay: React.FC<{
 export const ProfilePage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const athleteId = id ? parseInt(id, 10) : undefined;
-  const isEditMode = !!athleteId && !isNaN(athleteId);
+  const athleteId = id;
+  const isEditMode = !!athleteId && athleteId !== 'new';
 
   const {
     athlete,
@@ -104,6 +105,8 @@ export const ProfilePage: React.FC = () => {
     resetMutationState,
   } = useAthleteProfile(isEditMode ? athleteId : undefined);
 
+  const { setAthleteId } = useAthleteContext();
+
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -111,12 +114,20 @@ export const ProfilePage: React.FC = () => {
   useEffect(() => {
     if (createSuccess && createdAthleteId) {
       setSuccessMessage('Profile created successfully!');
+      setAthleteId(createdAthleteId);
       // Navigate to the edit page for the new profile
       setTimeout(() => {
         navigate(`/profile/${createdAthleteId}`, { replace: true });
       }, 1500);
     }
-  }, [createSuccess, createdAthleteId, navigate]);
+  }, [createSuccess, createdAthleteId, navigate, setAthleteId]);
+
+  // Sync athlete ID to context when loading existing profile
+  useEffect(() => {
+    if (isEditMode && athleteId && athlete) {
+      setAthleteId(athleteId);
+    }
+  }, [isEditMode, athleteId, athlete, setAthleteId]);
 
   // Show success message after update
   useEffect(() => {

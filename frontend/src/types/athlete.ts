@@ -24,7 +24,7 @@ export type AthleteGoal =
  * Athlete entity as returned from the API
  */
 export interface Athlete {
-  id: number;
+  id: string;
   name: string;
   age: number | null;
   gender: Gender | null;
