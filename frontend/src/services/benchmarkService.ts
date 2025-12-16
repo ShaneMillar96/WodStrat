@@ -10,6 +10,7 @@ import type {
 /**
  * Benchmark API service
  * Provides methods for benchmark CRUD operations
+ * Note: Uses session-based identification via JWT token
  */
 export const benchmarkService = {
   /**
@@ -21,63 +22,54 @@ export const benchmarkService = {
   },
 
   /**
-   * Get all benchmarks for an athlete
-   * @param athleteId - The athlete's unique identifier
+   * Get all benchmarks for the current user's athlete
    * @returns List of athlete's benchmark results
    */
-  getAthleteBenchmarks: async (athleteId: number): Promise<AthleteBenchmark[]> => {
-    return api.get<AthleteBenchmark[]>(`/athletes/${athleteId}/benchmarks`);
+  getMyBenchmarks: async (): Promise<AthleteBenchmark[]> => {
+    return api.get<AthleteBenchmark[]>('/benchmarks');
   },
 
   /**
-   * Get benchmark summary for an athlete
-   * @param athleteId - The athlete's unique identifier
+   * Get benchmark summary for the current user's athlete
    * @returns Summary with completion stats and all benchmarks
    */
-  getSummary: async (athleteId: number): Promise<BenchmarkSummary> => {
-    return api.get<BenchmarkSummary>(`/athletes/${athleteId}/benchmarks/summary`);
+  getMySummary: async (): Promise<BenchmarkSummary> => {
+    return api.get<BenchmarkSummary>('/benchmarks/summary');
   },
 
   /**
-   * Create a new benchmark result for an athlete
-   * @param athleteId - The athlete's unique identifier
+   * Create a new benchmark result
    * @param data - The benchmark data to create
    * @returns The created benchmark result
    */
-  create: async (
-    athleteId: number,
-    data: CreateBenchmarkRequest
-  ): Promise<AthleteBenchmark> => {
+  create: async (data: CreateBenchmarkRequest): Promise<AthleteBenchmark> => {
     return api.post<AthleteBenchmark, CreateBenchmarkRequest>(
-      `/athletes/${athleteId}/benchmarks`,
+      '/benchmarks',
       data
     );
   },
 
   /**
    * Update an existing benchmark result
-   * @param athleteId - The athlete's unique identifier
    * @param benchmarkId - The benchmark result's unique identifier
    * @param data - The benchmark data to update
    * @returns The updated benchmark result
    */
   update: async (
-    athleteId: number,
     benchmarkId: number,
     data: UpdateBenchmarkRequest
   ): Promise<AthleteBenchmark> => {
     return api.put<AthleteBenchmark, UpdateBenchmarkRequest>(
-      `/athletes/${athleteId}/benchmarks/${benchmarkId}`,
+      `/benchmarks/${benchmarkId}`,
       data
     );
   },
 
   /**
    * Delete a benchmark result
-   * @param athleteId - The athlete's unique identifier
    * @param benchmarkId - The benchmark result's unique identifier
    */
-  delete: async (athleteId: number, benchmarkId: number): Promise<void> => {
-    return api.delete(`/athletes/${athleteId}/benchmarks/${benchmarkId}`);
+  delete: async (benchmarkId: number): Promise<void> => {
+    return api.delete(`/benchmarks/${benchmarkId}`);
   },
 };

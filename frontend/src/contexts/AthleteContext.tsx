@@ -1,47 +1,50 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import { useAuthContext } from './AuthContext';
 
 interface AthleteContextValue {
   athleteId: number | null;
+  hasAthlete: boolean;
   setAthleteId: (id: number | null) => void;
   clearAthlete: () => void;
-  hasAthlete: boolean;
 }
-
-const STORAGE_KEY = 'wodstrat_current_athlete_id';
 
 const AthleteContext = createContext<AthleteContextValue | undefined>(undefined);
 
 export const AthleteProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [athleteId, setAthleteIdState] = useState<number | null>(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored === null) return null;
-    const parsed = Number(stored);
-    return isNaN(parsed) ? null : parsed;
-  });
+  const { user, isAuthenticated, updateAthleteId } = useAuthContext();
+  const [athleteId, setAthleteIdState] = useState<number | null>(
+    user?.athleteId ?? null
+  );
+
+  // Sync athlete ID from auth context when user changes
+  useEffect(() => {
+    if (user?.athleteId !== undefined) {
+      setAthleteIdState(user.athleteId);
+    } else if (!isAuthenticated) {
+      setAthleteIdState(null);
+    }
+  }, [user?.athleteId, isAuthenticated]);
 
   const setAthleteId = useCallback((id: number | null) => {
     setAthleteIdState(id);
     if (id !== null) {
-      localStorage.setItem(STORAGE_KEY, String(id));
-    } else {
-      localStorage.removeItem(STORAGE_KEY);
+      updateAthleteId(id);
     }
-  }, []);
+  }, [updateAthleteId]);
 
   const clearAthlete = useCallback(() => {
     setAthleteIdState(null);
-    localStorage.removeItem(STORAGE_KEY);
   }, []);
 
   return (
     <AthleteContext.Provider
       value={{
         athleteId,
+        hasAthlete: athleteId !== null,
         setAthleteId,
         clearAthlete,
-        hasAthlete: athleteId !== null,
       }}
     >
       {children}

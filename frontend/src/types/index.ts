@@ -1,4 +1,15 @@
 export type {
+  User,
+  JwtPayload,
+  AuthState,
+  LoginRequest,
+  RegisterRequest,
+  AuthResponse,
+  LoginFormData,
+  RegisterFormData,
+} from './auth';
+
+export type {
   Gender,
   ExperienceLevel,
   AthleteGoal,

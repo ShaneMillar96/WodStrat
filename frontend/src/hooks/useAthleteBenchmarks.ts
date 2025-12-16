@@ -9,12 +9,44 @@ import type {
 import { useBenchmarkDefinitions } from './useBenchmarkDefinitions';
 
 /**
- * Hook for fetching athlete benchmarks
+ * Hook for fetching current user's benchmarks
+ */
+export function useMyBenchmarksQuery() {
+  return useQuery({
+    queryKey: queryKeys.benchmarks.myBenchmarks(),
+    queryFn: () => benchmarkService.getMyBenchmarks(),
+    retry: (failureCount, error) => {
+      if (error instanceof ApiException && (error.isNotFound() || error.status === 401)) {
+        return false;
+      }
+      return failureCount < 1;
+    },
+  });
+}
+
+/**
+ * Hook for fetching current user's benchmark summary
+ */
+export function useMyBenchmarkSummaryQuery() {
+  return useQuery({
+    queryKey: queryKeys.benchmarks.mySummary(),
+    queryFn: () => benchmarkService.getMySummary(),
+    retry: (failureCount, error) => {
+      if (error instanceof ApiException && (error.isNotFound() || error.status === 401)) {
+        return false;
+      }
+      return failureCount < 1;
+    },
+  });
+}
+
+/**
+ * Legacy hook for fetching athlete benchmarks by ID (for backward compatibility)
  */
 export function useAthleteBenchmarksQuery(athleteId: number | undefined) {
   return useQuery({
     queryKey: queryKeys.benchmarks.athleteBenchmarks(athleteId!),
-    queryFn: () => benchmarkService.getAthleteBenchmarks(athleteId!),
+    queryFn: () => benchmarkService.getMyBenchmarks(), // Uses session-based endpoint
     enabled: !!athleteId,
     retry: (failureCount, error) => {
       if (error instanceof ApiException && error.isNotFound()) {
@@ -26,12 +58,12 @@ export function useAthleteBenchmarksQuery(athleteId: number | undefined) {
 }
 
 /**
- * Hook for fetching benchmark summary
+ * Legacy hook for fetching benchmark summary by athlete ID (for backward compatibility)
  */
 export function useBenchmarkSummaryQuery(athleteId: number | undefined) {
   return useQuery({
     queryKey: queryKeys.benchmarks.summary(athleteId!),
-    queryFn: () => benchmarkService.getSummary(athleteId!),
+    queryFn: () => benchmarkService.getMySummary(), // Uses session-based endpoint
     enabled: !!athleteId,
     retry: (failureCount, error) => {
       if (error instanceof ApiException && error.isNotFound()) {
@@ -44,16 +76,13 @@ export function useBenchmarkSummaryQuery(athleteId: number | undefined) {
 
 /**
  * Combined hook for athlete benchmarks with definitions
- * Provides merged view of definitions with athlete's recorded values
+ * Uses session-based identification (no athleteId parameter)
  */
-export function useAthleteBenchmarks(
-  athleteId: number | undefined,
-  categoryFilter?: BenchmarkCategory | 'All'
-) {
+export function useAthleteBenchmarks(categoryFilter?: BenchmarkCategory | 'All') {
   const { allDefinitions, isLoading: definitionsLoading, error: definitionsError } =
     useBenchmarkDefinitions();
-  const benchmarksQuery = useAthleteBenchmarksQuery(athleteId);
-  const summaryQuery = useBenchmarkSummaryQuery(athleteId);
+  const benchmarksQuery = useMyBenchmarksQuery();
+  const summaryQuery = useMyBenchmarkSummaryQuery();
 
   // Create a map of benchmark definition ID to athlete benchmark
   const benchmarkMap = new Map<number, AthleteBenchmark>();

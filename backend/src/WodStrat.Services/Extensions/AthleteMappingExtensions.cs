@@ -35,12 +35,14 @@ public static class AthleteMappingExtensions
     /// Maps a CreateAthleteDto to a new Athlete entity.
     /// </summary>
     /// <param name="dto">The create DTO.</param>
+    /// <param name="userId">Optional user ID to associate with the athlete.</param>
     /// <returns>A new athlete entity.</returns>
-    public static Athlete ToEntity(this CreateAthleteDto dto)
+    public static Athlete ToEntity(this CreateAthleteDto dto, int? userId = null)
     {
         var entity = new Athlete
         {
             // Id is NOT set - database will auto-generate via SERIAL/IDENTITY
+            UserId = userId,
             Name = dto.Name,
             DateOfBirth = dto.DateOfBirth,
             Gender = dto.Gender,

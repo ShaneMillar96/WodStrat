@@ -19,6 +19,7 @@ public class AthletesControllerTests
 {
     private readonly IFixture _fixture;
     private readonly IAthleteService _athleteService;
+    private readonly ICurrentUserService _currentUserService;
     private readonly AthletesController _sut;
 
     public AthletesControllerTests()
@@ -28,21 +29,22 @@ public class AthletesControllerTests
             .Customize(new AthleteDtoCustomization());
 
         _athleteService = Substitute.For<IAthleteService>();
-        _sut = new AthletesController(_athleteService);
+        _currentUserService = Substitute.For<ICurrentUserService>();
+        _sut = new AthletesController(_athleteService, _currentUserService);
     }
 
-    #region GetById Tests
+    #region GetCurrentUserProfile Tests
 
     [Fact]
-    public async Task GetById_ValidId_ReturnsOkWithAthleteResponse()
+    public async Task GetCurrentUserProfile_HasAthleteProfile_ReturnsOkWithAthleteResponse()
     {
         // Arrange
         var athleteDto = _fixture.Create<AthleteDto>();
-        _athleteService.GetByIdAsync(athleteDto.Id, Arg.Any<CancellationToken>())
+        _athleteService.GetCurrentUserAthleteAsync(Arg.Any<CancellationToken>())
             .Returns(athleteDto);
 
         // Act
-        var result = await _sut.GetById(athleteDto.Id, CancellationToken.None);
+        var result = await _sut.GetCurrentUserProfile(CancellationToken.None);
 
         // Assert
         var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
@@ -55,36 +57,22 @@ public class AthletesControllerTests
     }
 
     [Fact]
-    public async Task GetById_InvalidId_ReturnsNotFound()
+    public async Task GetCurrentUserProfile_NoAthleteProfile_ReturnsNotFound()
     {
         // Arrange
-        var invalidId = 999;
-        _athleteService.GetByIdAsync(invalidId, Arg.Any<CancellationToken>())
+        _athleteService.GetCurrentUserAthleteAsync(Arg.Any<CancellationToken>())
             .Returns((AthleteDto?)null);
 
         // Act
-        var result = await _sut.GetById(invalidId, CancellationToken.None);
+        var result = await _sut.GetCurrentUserProfile(CancellationToken.None);
 
         // Assert
-        result.Result.Should().BeOfType<NotFoundResult>();
+        var notFoundResult = result.Result.Should().BeOfType<NotFoundObjectResult>().Subject;
+        notFoundResult.StatusCode.Should().Be(404);
     }
 
     [Fact]
-    public async Task GetById_ServiceReturnsNull_ReturnsNotFound()
-    {
-        // Arrange
-        _athleteService.GetByIdAsync(Arg.Any<int>(), Arg.Any<CancellationToken>())
-            .Returns((AthleteDto?)null);
-
-        // Act
-        var result = await _sut.GetById(1, CancellationToken.None);
-
-        // Assert
-        result.Result.Should().BeOfType<NotFoundResult>();
-    }
-
-    [Fact]
-    public async Task GetById_MapsAllDtoPropertiesToResponse()
+    public async Task GetCurrentUserProfile_MapsAllDtoPropertiesToResponse()
     {
         // Arrange
         var athleteDto = _fixture.Build<AthleteDto>()
@@ -94,11 +82,11 @@ public class AthletesControllerTests
             .With(x => x.WeightKg, 60m)
             .Create();
 
-        _athleteService.GetByIdAsync(athleteDto.Id, Arg.Any<CancellationToken>())
+        _athleteService.GetCurrentUserAthleteAsync(Arg.Any<CancellationToken>())
             .Returns(athleteDto);
 
         // Act
-        var result = await _sut.GetById(athleteDto.Id, CancellationToken.None);
+        var result = await _sut.GetCurrentUserProfile(CancellationToken.None);
 
         // Assert
         var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
@@ -114,33 +102,6 @@ public class AthletesControllerTests
         response.PrimaryGoal.Should().Be(athleteDto.PrimaryGoal);
         response.CreatedAt.Should().Be(athleteDto.CreatedAt);
         response.UpdatedAt.Should().Be(athleteDto.UpdatedAt);
-    }
-
-    #endregion
-
-    #region GetCurrentUserProfile Tests
-
-    [Fact]
-    public void GetCurrentUserProfile_ReturnsNotImplemented()
-    {
-        // Act
-        var result = _sut.GetCurrentUserProfile();
-
-        // Assert
-        var statusCodeResult = result.Should().BeOfType<ObjectResult>().Subject;
-        statusCodeResult.StatusCode.Should().Be(501);
-    }
-
-    [Fact]
-    public void GetCurrentUserProfile_ReturnsProperProblemDetails()
-    {
-        // Act
-        var result = _sut.GetCurrentUserProfile();
-
-        // Assert
-        var statusCodeResult = result.Should().BeOfType<ObjectResult>().Subject;
-        var responseValue = statusCodeResult.Value;
-        responseValue.Should().NotBeNull();
     }
 
     #endregion
@@ -168,7 +129,7 @@ public class AthletesControllerTests
             .With(x => x.PrimaryGoal, request.PrimaryGoal)
             .Create();
 
-        _athleteService.CreateAsync(Arg.Any<CreateAthleteDto>(), Arg.Any<CancellationToken>())
+        _athleteService.CreateForCurrentUserAsync(Arg.Any<CreateAthleteDto>(), Arg.Any<CancellationToken>())
             .Returns(createdDto);
 
         // Act
@@ -176,12 +137,33 @@ public class AthletesControllerTests
 
         // Assert
         var createdResult = result.Result.Should().BeOfType<CreatedAtActionResult>().Subject;
-        createdResult.ActionName.Should().Be(nameof(AthletesController.GetById));
-        createdResult.RouteValues.Should().ContainKey("id");
-        createdResult.RouteValues!["id"].Should().Be(createdDto.Id);
+        createdResult.ActionName.Should().Be(nameof(AthletesController.GetCurrentUserProfile));
+        createdResult.StatusCode.Should().Be(201);
 
         var response = createdResult.Value.Should().BeOfType<AthleteResponse>().Subject;
         response.Name.Should().Be(request.Name);
+    }
+
+    [Fact]
+    public async Task Create_UserAlreadyHasProfile_ReturnsConflict()
+    {
+        // Arrange
+        var request = new CreateAthleteRequest
+        {
+            Name = "Test Athlete",
+            ExperienceLevel = "Beginner",
+            PrimaryGoal = "GeneralFitness"
+        };
+
+        _athleteService.CreateForCurrentUserAsync(Arg.Any<CreateAthleteDto>(), Arg.Any<CancellationToken>())
+            .Returns((AthleteDto?)null);
+
+        // Act
+        var result = await _sut.Create(request, CancellationToken.None);
+
+        // Assert
+        var conflictResult = result.Result.Should().BeOfType<ConflictObjectResult>().Subject;
+        conflictResult.StatusCode.Should().Be(409);
     }
 
     [Fact]
@@ -200,14 +182,14 @@ public class AthletesControllerTests
         };
 
         var createdDto = _fixture.Create<AthleteDto>();
-        _athleteService.CreateAsync(Arg.Any<CreateAthleteDto>(), Arg.Any<CancellationToken>())
+        _athleteService.CreateForCurrentUserAsync(Arg.Any<CreateAthleteDto>(), Arg.Any<CancellationToken>())
             .Returns(createdDto);
 
         // Act
         await _sut.Create(request, CancellationToken.None);
 
         // Assert
-        await _athleteService.Received(1).CreateAsync(
+        await _athleteService.Received(1).CreateForCurrentUserAsync(
             Arg.Is<CreateAthleteDto>(dto =>
                 dto.Name == "Test Athlete" && // Trimmed
                 dto.Gender == request.Gender &&
@@ -218,38 +200,19 @@ public class AthletesControllerTests
             Arg.Any<CancellationToken>());
     }
 
-    [Fact]
-    public async Task Create_Returns201StatusCode()
-    {
-        // Arrange
-        var request = new CreateAthleteRequest
-        {
-            Name = "Test",
-            ExperienceLevel = "Beginner",
-            PrimaryGoal = "GeneralFitness"
-        };
-
-        var createdDto = _fixture.Create<AthleteDto>();
-        _athleteService.CreateAsync(Arg.Any<CreateAthleteDto>(), Arg.Any<CancellationToken>())
-            .Returns(createdDto);
-
-        // Act
-        var result = await _sut.Create(request, CancellationToken.None);
-
-        // Assert
-        var createdResult = result.Result.Should().BeOfType<CreatedAtActionResult>().Subject;
-        createdResult.StatusCode.Should().Be(201);
-    }
-
     #endregion
 
-    #region Update Tests
+    #region UpdateCurrentUserProfile Tests
 
     [Fact]
-    public async Task Update_ValidIdAndRequest_ReturnsOkWithUpdatedResponse()
+    public async Task UpdateCurrentUserProfile_ValidRequest_ReturnsOkWithUpdatedResponse()
     {
         // Arrange
         var athleteId = 1;
+        var currentAthlete = _fixture.Build<AthleteDto>()
+            .With(x => x.Id, athleteId)
+            .Create();
+
         var request = new UpdateAthleteRequest
         {
             Name = "Updated Name",
@@ -268,11 +231,13 @@ public class AthletesControllerTests
             .With(x => x.PrimaryGoal, request.PrimaryGoal)
             .Create();
 
+        _athleteService.GetCurrentUserAthleteAsync(Arg.Any<CancellationToken>())
+            .Returns(currentAthlete);
         _athleteService.UpdateAsync(athleteId, Arg.Any<UpdateAthleteDto>(), Arg.Any<CancellationToken>())
             .Returns(updatedDto);
 
         // Act
-        var result = await _sut.Update(athleteId, request, CancellationToken.None);
+        var result = await _sut.UpdateCurrentUserProfile(request, CancellationToken.None);
 
         // Assert
         var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
@@ -284,10 +249,9 @@ public class AthletesControllerTests
     }
 
     [Fact]
-    public async Task Update_InvalidId_ReturnsNotFound()
+    public async Task UpdateCurrentUserProfile_NoAthleteProfile_ReturnsNotFound()
     {
         // Arrange
-        var invalidId = 999;
         var request = new UpdateAthleteRequest
         {
             Name = "Test",
@@ -295,21 +259,26 @@ public class AthletesControllerTests
             PrimaryGoal = "GeneralFitness"
         };
 
-        _athleteService.UpdateAsync(invalidId, Arg.Any<UpdateAthleteDto>(), Arg.Any<CancellationToken>())
+        _athleteService.GetCurrentUserAthleteAsync(Arg.Any<CancellationToken>())
             .Returns((AthleteDto?)null);
 
         // Act
-        var result = await _sut.Update(invalidId, request, CancellationToken.None);
+        var result = await _sut.UpdateCurrentUserProfile(request, CancellationToken.None);
 
         // Assert
-        result.Result.Should().BeOfType<NotFoundResult>();
+        var notFoundResult = result.Result.Should().BeOfType<NotFoundObjectResult>().Subject;
+        notFoundResult.StatusCode.Should().Be(404);
     }
 
     [Fact]
-    public async Task Update_CallsServiceWithCorrectIdAndMappedDto()
+    public async Task UpdateCurrentUserProfile_CallsServiceWithCorrectIdAndMappedDto()
     {
         // Arrange
         var athleteId = 1;
+        var currentAthlete = _fixture.Build<AthleteDto>()
+            .With(x => x.Id, athleteId)
+            .Create();
+
         var request = new UpdateAthleteRequest
         {
             Name = "  Updated Name  ",
@@ -318,11 +287,13 @@ public class AthletesControllerTests
         };
 
         var updatedDto = _fixture.Create<AthleteDto>();
+        _athleteService.GetCurrentUserAthleteAsync(Arg.Any<CancellationToken>())
+            .Returns(currentAthlete);
         _athleteService.UpdateAsync(athleteId, Arg.Any<UpdateAthleteDto>(), Arg.Any<CancellationToken>())
             .Returns(updatedDto);
 
         // Act
-        await _sut.Update(athleteId, request, CancellationToken.None);
+        await _sut.UpdateCurrentUserProfile(request, CancellationToken.None);
 
         // Assert
         await _athleteService.Received(1).UpdateAsync(
@@ -336,62 +307,60 @@ public class AthletesControllerTests
 
     #endregion
 
-    #region Delete Tests
+    #region DeleteCurrentUserProfile Tests
 
     [Fact]
-    public async Task Delete_ValidId_ReturnsNoContent()
+    public async Task DeleteCurrentUserProfile_ValidProfile_ReturnsNoContent()
     {
         // Arrange
         var athleteId = 1;
+        var currentAthlete = _fixture.Build<AthleteDto>()
+            .With(x => x.Id, athleteId)
+            .Create();
+
+        _athleteService.GetCurrentUserAthleteAsync(Arg.Any<CancellationToken>())
+            .Returns(currentAthlete);
         _athleteService.DeleteAsync(athleteId, Arg.Any<CancellationToken>())
             .Returns(true);
 
         // Act
-        var result = await _sut.Delete(athleteId, CancellationToken.None);
+        var result = await _sut.DeleteCurrentUserProfile(CancellationToken.None);
 
         // Assert
         result.Should().BeOfType<NoContentResult>();
     }
 
     [Fact]
-    public async Task Delete_InvalidId_ReturnsNotFound()
+    public async Task DeleteCurrentUserProfile_NoAthleteProfile_ReturnsNotFound()
     {
         // Arrange
-        var invalidId = 999;
-        _athleteService.DeleteAsync(invalidId, Arg.Any<CancellationToken>())
-            .Returns(false);
+        _athleteService.GetCurrentUserAthleteAsync(Arg.Any<CancellationToken>())
+            .Returns((AthleteDto?)null);
 
         // Act
-        var result = await _sut.Delete(invalidId, CancellationToken.None);
+        var result = await _sut.DeleteCurrentUserProfile(CancellationToken.None);
 
         // Assert
-        result.Should().BeOfType<NotFoundResult>();
+        var notFoundResult = result.Should().BeOfType<NotFoundObjectResult>().Subject;
+        notFoundResult.StatusCode.Should().Be(404);
     }
 
     [Fact]
-    public async Task Delete_ServiceReturnsFalse_ReturnsNotFound()
-    {
-        // Arrange
-        _athleteService.DeleteAsync(Arg.Any<int>(), Arg.Any<CancellationToken>())
-            .Returns(false);
-
-        // Act
-        var result = await _sut.Delete(1, CancellationToken.None);
-
-        // Assert
-        result.Should().BeOfType<NotFoundResult>();
-    }
-
-    [Fact]
-    public async Task Delete_CallsServiceWithCorrectId()
+    public async Task DeleteCurrentUserProfile_CallsServiceWithCorrectId()
     {
         // Arrange
         var athleteId = 1;
+        var currentAthlete = _fixture.Build<AthleteDto>()
+            .With(x => x.Id, athleteId)
+            .Create();
+
+        _athleteService.GetCurrentUserAthleteAsync(Arg.Any<CancellationToken>())
+            .Returns(currentAthlete);
         _athleteService.DeleteAsync(athleteId, Arg.Any<CancellationToken>())
             .Returns(true);
 
         // Act
-        await _sut.Delete(athleteId, CancellationToken.None);
+        await _sut.DeleteCurrentUserProfile(CancellationToken.None);
 
         // Assert
         await _athleteService.Received(1).DeleteAsync(athleteId, Arg.Any<CancellationToken>());
@@ -402,15 +371,15 @@ public class AthletesControllerTests
     #region Response Mapping Tests
 
     [Fact]
-    public async Task GetById_NeverExposesDateOfBirth()
+    public async Task GetCurrentUserProfile_NeverExposesDateOfBirth()
     {
         // Arrange
         var athleteDto = _fixture.Create<AthleteDto>();
-        _athleteService.GetByIdAsync(athleteDto.Id, Arg.Any<CancellationToken>())
+        _athleteService.GetCurrentUserAthleteAsync(Arg.Any<CancellationToken>())
             .Returns(athleteDto);
 
         // Act
-        var result = await _sut.GetById(athleteDto.Id, CancellationToken.None);
+        var result = await _sut.GetCurrentUserProfile(CancellationToken.None);
 
         // Assert
         var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
@@ -422,18 +391,18 @@ public class AthletesControllerTests
     }
 
     [Fact]
-    public async Task GetById_ReturnsAgeNotDateOfBirth()
+    public async Task GetCurrentUserProfile_ReturnsAgeNotDateOfBirth()
     {
         // Arrange
         var athleteDto = _fixture.Build<AthleteDto>()
             .With(x => x.Age, 25)
             .Create();
 
-        _athleteService.GetByIdAsync(athleteDto.Id, Arg.Any<CancellationToken>())
+        _athleteService.GetCurrentUserAthleteAsync(Arg.Any<CancellationToken>())
             .Returns(athleteDto);
 
         // Act
-        var result = await _sut.GetById(athleteDto.Id, CancellationToken.None);
+        var result = await _sut.GetCurrentUserProfile(CancellationToken.None);
 
         // Assert
         var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;

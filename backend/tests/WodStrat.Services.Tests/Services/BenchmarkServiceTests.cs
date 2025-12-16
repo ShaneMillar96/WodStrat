@@ -7,6 +7,7 @@ using WodStrat.Dal.Enums;
 using WodStrat.Dal.Interfaces;
 using WodStrat.Dal.Models;
 using WodStrat.Services.Dtos;
+using WodStrat.Services.Interfaces;
 using WodStrat.Services.Services;
 using WodStrat.Services.Tests.Customizations;
 using Xunit;
@@ -20,6 +21,8 @@ public class BenchmarkServiceTests
 {
     private readonly IFixture _fixture;
     private readonly IWodStratDatabase _database;
+    private readonly ICurrentUserService _currentUserService;
+    private readonly IAthleteService _athleteService;
     private readonly BenchmarkService _sut;
 
     public BenchmarkServiceTests()
@@ -29,7 +32,9 @@ public class BenchmarkServiceTests
             .Customize(new BenchmarkCustomization());
 
         _database = Substitute.For<IWodStratDatabase>();
-        _sut = new BenchmarkService(_database);
+        _currentUserService = Substitute.For<ICurrentUserService>();
+        _athleteService = Substitute.For<IAthleteService>();
+        _sut = new BenchmarkService(_database, _currentUserService, _athleteService);
     }
 
     #region GetAllDefinitionsAsync Tests

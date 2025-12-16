@@ -8,6 +8,7 @@ export const queryKeys = {
    */
   athletes: {
     all: ['athletes'] as const,
+    me: () => [...queryKeys.athletes.all, 'me'] as const,
     lists: () => [...queryKeys.athletes.all, 'list'] as const,
     list: (filters: Record<string, unknown>) =>
       [...queryKeys.athletes.lists(), filters] as const,
@@ -21,6 +22,9 @@ export const queryKeys = {
   benchmarks: {
     all: ['benchmarks'] as const,
     definitions: () => [...queryKeys.benchmarks.all, 'definitions'] as const,
+    myBenchmarks: () => [...queryKeys.benchmarks.all, 'my'] as const,
+    mySummary: () => [...queryKeys.benchmarks.all, 'my', 'summary'] as const,
+    // Legacy keys (for backward compatibility during migration)
     athleteBenchmarks: (athleteId: number) =>
       [...queryKeys.benchmarks.all, 'athlete', athleteId] as const,
     summary: (athleteId: number) =>

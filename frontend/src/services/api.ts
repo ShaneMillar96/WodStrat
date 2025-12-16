@@ -1,6 +1,28 @@
 import type { ApiError, ValidationErrors } from '../types';
 
 const API_BASE = '/api';
+const TOKEN_STORAGE_KEY = 'wodstrat_auth_token';
+
+/**
+ * Get stored auth token
+ */
+export function getAuthToken(): string | null {
+  return localStorage.getItem(TOKEN_STORAGE_KEY);
+}
+
+/**
+ * Store auth token
+ */
+export function setAuthToken(token: string): void {
+  localStorage.setItem(TOKEN_STORAGE_KEY, token);
+}
+
+/**
+ * Clear stored auth token
+ */
+export function clearAuthToken(): void {
+  localStorage.removeItem(TOKEN_STORAGE_KEY);
+}
 
 /**
  * Custom exception class for API errors
@@ -70,24 +92,48 @@ async function parseErrorResponse(response: Response): Promise<ApiError> {
 }
 
 /**
- * Generic fetch wrapper with error handling
+ * Generic fetch wrapper with error handling and JWT injection
+ * @param endpoint - API endpoint to call
+ * @param options - Fetch options
+ * @param skipAuth - If true, do not add Authorization header (for login/register)
  */
 async function request<T>(
   endpoint: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
+  skipAuth: boolean = false
 ): Promise<T> {
   const url = `${API_BASE}${endpoint}`;
+  const token = getAuthToken();
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(options.headers as Record<string, string>),
+  };
+
+  // Add Authorization header if token exists and not skipping auth
+  if (token && !skipAuth) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
   const config: RequestInit = {
     ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
+    headers,
   };
 
   const response = await fetch(url, config);
 
   if (!response.ok) {
+    // Handle 401 Unauthorized - clear token and redirect
+    if (response.status === 401 && !skipAuth) {
+      clearAuthToken();
+      window.location.href = '/login';
+      throw new ApiException({
+        title: 'Session expired',
+        status: 401,
+        detail: 'Please log in again',
+      });
+    }
+
     const error = await parseErrorResponse(response);
     throw new ApiException(error);
   }
@@ -136,5 +182,19 @@ export const api = {
    */
   delete: <T = void>(endpoint: string): Promise<T> => {
     return request<T>(endpoint, { method: 'DELETE' });
+  },
+
+  /**
+   * POST request without auth header (for login/register)
+   */
+  postNoAuth: <T, D = unknown>(endpoint: string, data: D): Promise<T> => {
+    return request<T>(
+      endpoint,
+      {
+        method: 'POST',
+        body: JSON.stringify(data),
+      },
+      true
+    );
   },
 };

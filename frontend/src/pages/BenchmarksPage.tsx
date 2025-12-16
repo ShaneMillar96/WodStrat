@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Alert, Button, ConfirmDialog } from '../components/ui';
 import {
   BenchmarkSummary,
@@ -59,12 +59,9 @@ const ErrorDisplay: React.FC<{
 /**
  * Benchmarks page container component
  * Displays all benchmarks and allows recording/editing results
+ * Uses session-based identification (no athleteId in URL)
  */
 export const BenchmarksPage: React.FC = () => {
-  const { athleteId: athleteIdParam } = useParams<{ athleteId: string }>();
-  const athleteId = athleteIdParam ? Number(athleteIdParam) : undefined;
-  const isValidAthleteId = athleteId !== undefined && !isNaN(athleteId) && athleteId > 0;
-
   // State
   const [categoryFilter, setCategoryFilter] = useState<FilterValue>('All');
   const [modalOpen, setModalOpen] = useState(false);
@@ -74,7 +71,7 @@ export const BenchmarksPage: React.FC = () => {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Hooks
+  // Hooks - now using session-based identification
   const {
     benchmarkRows,
     recordedCount,
@@ -85,10 +82,7 @@ export const BenchmarksPage: React.FC = () => {
     isLoading,
     error,
     refetchAll,
-  } = useAthleteBenchmarks(
-    isValidAthleteId ? athleteId : undefined,
-    categoryFilter
-  );
+  } = useAthleteBenchmarks(categoryFilter);
 
   const {
     createBenchmark,
@@ -102,7 +96,7 @@ export const BenchmarksPage: React.FC = () => {
     deleteSuccess,
     error: mutationError,
     resetMutationState,
-  } = useBenchmarkMutations(athleteId!);
+  } = useBenchmarkMutations();
 
   // Handle success messages
   useEffect(() => {
@@ -216,22 +210,6 @@ export const BenchmarksPage: React.FC = () => {
     }
   };
 
-  // Invalid athlete ID
-  if (!isValidAthleteId) {
-    return (
-      <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
-        <Alert variant="error" title="Invalid Athlete">
-          Please provide a valid athlete ID.
-        </Alert>
-        <div className="mt-4">
-          <Link to="/profile/new">
-            <Button variant="primary">Create Profile</Button>
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
   // Error state
   if (error && !benchmarkRows.length) {
     return (
@@ -253,7 +231,7 @@ export const BenchmarksPage: React.FC = () => {
               <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">
                 Benchmarks
               </h1>
-              <Link to={`/profile/${athleteId}`}>
+              <Link to="/profile">
                 <Button variant="outline" size="sm">
                   Back to Profile
                 </Button>

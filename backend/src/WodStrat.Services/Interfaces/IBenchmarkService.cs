@@ -91,4 +91,39 @@ public interface IBenchmarkService
     Task<bool> DeleteBenchmarkAsync(int athleteId, int benchmarkId, CancellationToken cancellationToken = default);
 
     #endregion
+
+    #region Current User Operations
+
+    /// <summary>
+    /// Gets benchmarks for the current user's athlete profile.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>List of benchmarks, or empty if user has no athlete profile.</returns>
+    Task<IReadOnlyList<AthleteBenchmarkDto>> GetCurrentUserBenchmarksAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets benchmark summary for the current user's athlete profile.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Benchmark summary, or null if user has no athlete profile.</returns>
+    Task<BenchmarkSummaryDto?> GetCurrentUserBenchmarkSummaryAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Records a benchmark for the current user's athlete.
+    /// </summary>
+    /// <param name="dto">The benchmark data to record.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Tuple containing the created benchmark (or null), duplicate flag, and unauthorized flag.</returns>
+    Task<(AthleteBenchmarkDto? Result, bool IsDuplicate, bool Unauthorized)> RecordCurrentUserBenchmarkAsync(
+        RecordBenchmarkDto dto, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Validates that the specified athlete belongs to the current user.
+    /// </summary>
+    /// <param name="athleteId">The athlete's unique identifier.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>True if the athlete belongs to the current user; otherwise false.</returns>
+    Task<bool> ValidateOwnershipAsync(int athleteId, CancellationToken cancellationToken = default);
+
+    #endregion
 }

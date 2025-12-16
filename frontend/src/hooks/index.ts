@@ -1,5 +1,8 @@
+export { useAuth } from './useAuth';
+
 export {
   useAthleteQuery,
+  useMyAthleteQuery,
   useCreateAthleteMutation,
   useUpdateAthleteMutation,
   useDeleteAthleteMutation,
@@ -14,6 +17,8 @@ export {
 export {
   useAthleteBenchmarksQuery,
   useBenchmarkSummaryQuery,
+  useMyBenchmarksQuery,
+  useMyBenchmarkSummaryQuery,
   useAthleteBenchmarks,
 } from './useAthleteBenchmarks';
 

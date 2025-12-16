@@ -7,6 +7,7 @@ using WodStrat.Dal.Enums;
 using WodStrat.Dal.Interfaces;
 using WodStrat.Dal.Models;
 using WodStrat.Services.Dtos;
+using WodStrat.Services.Interfaces;
 using WodStrat.Services.Services;
 using WodStrat.Services.Tests.Customizations;
 using Xunit;
@@ -20,6 +21,7 @@ public class AthleteServiceTests
 {
     private readonly IFixture _fixture;
     private readonly IWodStratDatabase _database;
+    private readonly ICurrentUserService _currentUserService;
     private readonly AthleteService _sut;
 
     public AthleteServiceTests()
@@ -29,7 +31,8 @@ public class AthleteServiceTests
             .Customize(new AthleteCustomization());
 
         _database = Substitute.For<IWodStratDatabase>();
-        _sut = new AthleteService(_database);
+        _currentUserService = Substitute.For<ICurrentUserService>();
+        _sut = new AthleteService(_database, _currentUserService);
     }
 
     #region GetByIdAsync Tests

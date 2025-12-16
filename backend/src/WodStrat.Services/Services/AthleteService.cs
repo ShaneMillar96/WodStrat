@@ -13,10 +13,12 @@ namespace WodStrat.Services.Services;
 public class AthleteService : IAthleteService
 {
     private readonly IWodStratDatabase _database;
+    private readonly ICurrentUserService _currentUserService;
 
-    public AthleteService(IWodStratDatabase database)
+    public AthleteService(IWodStratDatabase database, ICurrentUserService currentUserService)
     {
         _database = database;
+        _currentUserService = currentUserService;
     }
 
     /// <inheritdoc />
@@ -42,12 +44,40 @@ public class AthleteService : IAthleteService
     /// <inheritdoc />
     public async Task<AthleteDto> CreateAsync(CreateAthleteDto dto, CancellationToken cancellationToken = default)
     {
-        var entity = dto.ToEntity();
+        return await CreateAsync(dto, null, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<AthleteDto> CreateAsync(CreateAthleteDto dto, int? userId, CancellationToken cancellationToken = default)
+    {
+        var entity = dto.ToEntity(userId);
 
         _database.Add(entity);
         await _database.SaveChangesAsync(cancellationToken);
 
         return entity.ToDto();
+    }
+
+    /// <inheritdoc />
+    public async Task<AthleteDto?> CreateForCurrentUserAsync(CreateAthleteDto dto, CancellationToken cancellationToken = default)
+    {
+        var userId = _currentUserService.GetRequiredUserId();
+
+        // Check if user already has an athlete profile
+        var existingAthlete = await GetByUserIdAsync(userId, cancellationToken);
+        if (existingAthlete != null)
+        {
+            return null; // User already has a profile
+        }
+
+        return await CreateAsync(dto, userId, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<AthleteDto?> GetCurrentUserAthleteAsync(CancellationToken cancellationToken = default)
+    {
+        var userId = _currentUserService.GetRequiredUserId();
+        return await GetByUserIdAsync(userId, cancellationToken);
     }
 
     /// <inheritdoc />

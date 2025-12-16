@@ -49,6 +49,11 @@ public class Athlete : EntityBase
 
     // Navigation properties
     /// <summary>
+    /// The user account that owns this athlete profile (one-to-one).
+    /// </summary>
+    public User? User { get; set; }
+
+    /// <summary>
     /// Collection of benchmark results for this athlete.
     /// </summary>
     public ICollection<AthleteBenchmark> Benchmarks { get; set; } = new List<AthleteBenchmark>();

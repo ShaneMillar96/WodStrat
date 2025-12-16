@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { ProfileForm } from '../components/forms/ProfileForm';
 import { Alert, Button } from '../components/ui';
 import { useAthleteProfile } from '../hooks';
@@ -83,12 +83,14 @@ const ErrorDisplay: React.FC<{
 /**
  * Profile page container component
  * Handles both create and edit modes
+ * Uses session-based identification (no ID in URL)
  */
 export const ProfilePage: React.FC = () => {
-  const { id: idParam } = useParams<{ id: string }>();
+  const location = useLocation();
   const navigate = useNavigate();
-  const athleteId = idParam && idParam !== 'new' ? Number(idParam) : undefined;
-  const isEditMode = athleteId !== undefined && !isNaN(athleteId);
+
+  // Determine mode from URL path
+  const isNewProfilePage = location.pathname === '/profile/new';
 
   const {
     athlete,
@@ -101,33 +103,54 @@ export const ProfilePage: React.FC = () => {
     isUpdating,
     createSuccess,
     updateSuccess,
+    hasAthlete,
     createdAthleteId,
     resetMutationState,
-  } = useAthleteProfile(isEditMode ? athleteId : undefined);
+  } = useAthleteProfile();
 
   const { setAthleteId } = useAthleteContext();
 
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  // Navigate to edit page after successful creation
+  // Navigation guard to prevent infinite redirect loops
+  const hasNavigated = useRef(false);
+
+  // Determine if we're in edit mode (existing athlete) or create mode
+  const isEditMode = hasAthlete && !isNewProfilePage;
+
+  // Handle redirects between /profile and /profile/new based on athlete existence
+  useEffect(() => {
+    // Skip if still loading or if we've already navigated
+    if (isLoading || hasNavigated.current) {
+      return;
+    }
+
+    // Redirect to /profile if on /profile/new but already has athlete
+    if (hasAthlete && isNewProfilePage) {
+      hasNavigated.current = true;
+      navigate('/profile', { replace: true });
+      return;
+    }
+
+    // Redirect to /profile/new if on /profile but no athlete
+    if (!hasAthlete && !isNewProfilePage && athlete === null) {
+      hasNavigated.current = true;
+      navigate('/profile/new', { replace: true });
+    }
+  }, [isLoading, hasAthlete, isNewProfilePage, athlete, navigate]);
+
+  // Navigate to profile page after successful creation
   useEffect(() => {
     if (createSuccess && createdAthleteId) {
       setSuccessMessage('Profile created successfully!');
       setAthleteId(createdAthleteId);
-      // Navigate to the edit page for the new profile
+      // Navigate to the profile page
       setTimeout(() => {
-        navigate(`/profile/${createdAthleteId}`, { replace: true });
+        navigate('/profile', { replace: true });
       }, 1500);
     }
   }, [createSuccess, createdAthleteId, navigate, setAthleteId]);
-
-  // Sync athlete ID to context when loading existing profile
-  useEffect(() => {
-    if (isEditMode && athleteId && athlete) {
-      setAthleteId(athleteId);
-    }
-  }, [isEditMode, athleteId, athlete, setAthleteId]);
 
   // Show success message after update
   useEffect(() => {
@@ -149,7 +172,7 @@ export const ProfilePage: React.FC = () => {
     try {
       const requestData = formDataToRequest(formData);
 
-      if (isEditMode && athleteId) {
+      if (isEditMode) {
         await updateAthlete(requestData as UpdateAthleteRequest);
       } else {
         await createAthlete(requestData as CreateAthleteRequest);
@@ -173,8 +196,8 @@ export const ProfilePage: React.FC = () => {
     setSubmitError(null);
   };
 
-  // Show loading skeleton while fetching in edit mode
-  if (isEditMode && isLoading) {
+  // Show loading skeleton while fetching
+  if (isLoading) {
     return (
       <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6 lg:px-8">
         <LoadingSkeleton />
@@ -182,8 +205,8 @@ export const ProfilePage: React.FC = () => {
     );
   }
 
-  // Show error if fetch failed
-  if (error && !athlete) {
+  // Show error if fetch failed (but not for 404 which just means no profile yet)
+  if (error && !(error instanceof ApiException && error.isNotFound())) {
     return (
       <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6 lg:px-8">
         <ErrorDisplay

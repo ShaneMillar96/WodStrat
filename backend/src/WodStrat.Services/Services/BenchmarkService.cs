@@ -15,10 +15,17 @@ public class BenchmarkService : IBenchmarkService
 {
     private const int MinimumBenchmarksRequired = 3;
     private readonly IWodStratDatabase _database;
+    private readonly ICurrentUserService _currentUserService;
+    private readonly IAthleteService _athleteService;
 
-    public BenchmarkService(IWodStratDatabase database)
+    public BenchmarkService(
+        IWodStratDatabase database,
+        ICurrentUserService currentUserService,
+        IAthleteService athleteService)
     {
         _database = database;
+        _currentUserService = currentUserService;
+        _athleteService = athleteService;
     }
 
     #region Benchmark Definitions
@@ -181,6 +188,74 @@ public class BenchmarkService : IBenchmarkService
         await _database.SaveChangesAsync(cancellationToken);
 
         return true;
+    }
+
+    #endregion
+
+    #region Current User Operations
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<AthleteBenchmarkDto>> GetCurrentUserBenchmarksAsync(CancellationToken cancellationToken = default)
+    {
+        var athlete = await _athleteService.GetCurrentUserAthleteAsync(cancellationToken);
+        if (athlete == null)
+        {
+            return Array.Empty<AthleteBenchmarkDto>();
+        }
+
+        return await GetAthleteBenchmarksAsync(athlete.Id, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<BenchmarkSummaryDto?> GetCurrentUserBenchmarkSummaryAsync(CancellationToken cancellationToken = default)
+    {
+        var athlete = await _athleteService.GetCurrentUserAthleteAsync(cancellationToken);
+        if (athlete == null)
+        {
+            return null;
+        }
+
+        return await GetBenchmarkSummaryAsync(athlete.Id, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<(AthleteBenchmarkDto? Result, bool IsDuplicate, bool Unauthorized)> RecordCurrentUserBenchmarkAsync(
+        RecordBenchmarkDto dto, CancellationToken cancellationToken = default)
+    {
+        var athlete = await _athleteService.GetCurrentUserAthleteAsync(cancellationToken);
+        if (athlete == null)
+        {
+            return (null, false, true); // Unauthorized - no athlete profile
+        }
+
+        var (result, isDuplicate) = await RecordBenchmarkAsync(athlete.Id, dto, cancellationToken);
+        return (result, isDuplicate, false);
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> ValidateOwnershipAsync(int athleteId, CancellationToken cancellationToken = default)
+    {
+        if (!_currentUserService.IsAuthenticated)
+        {
+            return false;
+        }
+
+        var userId = _currentUserService.UserId;
+        if (!userId.HasValue)
+        {
+            return false;
+        }
+
+        var athlete = await _database.Get<Athlete>()
+            .Where(a => a.Id == athleteId && !a.IsDeleted)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (athlete == null)
+        {
+            return false;
+        }
+
+        return athlete.UserId == userId.Value;
     }
 
     #endregion

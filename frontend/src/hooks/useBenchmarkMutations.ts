@@ -1,102 +1,48 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { benchmarkService, ApiException } from '../services';
+import { benchmarkService } from '../services';
 import { queryKeys } from '../lib/queryKeys';
 import type { CreateBenchmarkRequest, UpdateBenchmarkRequest } from '../types';
 
 /**
- * Hook for creating a new benchmark result
+ * Hook for benchmark CRUD mutations
+ * Uses session-based identification (no athleteId parameter)
  */
-export function useCreateBenchmarkMutation(athleteId: number) {
+export function useBenchmarkMutations() {
   const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: (data: CreateBenchmarkRequest) =>
-      benchmarkService.create(athleteId, data),
+  const createMutation = useMutation({
+    mutationFn: (data: CreateBenchmarkRequest) => benchmarkService.create(data),
     onSuccess: () => {
-      // Invalidate athlete benchmarks and summary queries
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.benchmarks.athleteBenchmarks(athleteId),
-      });
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.benchmarks.summary(athleteId),
-      });
+      queryClient.invalidateQueries({ queryKey: queryKeys.benchmarks.myBenchmarks() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.benchmarks.mySummary() });
     },
   });
-}
 
-/**
- * Hook for updating an existing benchmark result
- */
-export function useUpdateBenchmarkMutation(athleteId: number) {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({
-      benchmarkId,
-      data,
-    }: {
-      benchmarkId: number;
-      data: UpdateBenchmarkRequest;
-    }) => benchmarkService.update(athleteId, benchmarkId, data),
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: UpdateBenchmarkRequest }) =>
+      benchmarkService.update(id, data),
     onSuccess: () => {
-      // Invalidate athlete benchmarks and summary queries
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.benchmarks.athleteBenchmarks(athleteId),
-      });
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.benchmarks.summary(athleteId),
-      });
+      queryClient.invalidateQueries({ queryKey: queryKeys.benchmarks.myBenchmarks() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.benchmarks.mySummary() });
     },
   });
-}
 
-/**
- * Hook for deleting a benchmark result
- */
-export function useDeleteBenchmarkMutation(athleteId: number) {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (benchmarkId: number) =>
-      benchmarkService.delete(athleteId, benchmarkId),
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => benchmarkService.delete(id),
     onSuccess: () => {
-      // Invalidate athlete benchmarks and summary queries
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.benchmarks.athleteBenchmarks(athleteId),
-      });
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.benchmarks.summary(athleteId),
-      });
+      queryClient.invalidateQueries({ queryKey: queryKeys.benchmarks.myBenchmarks() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.benchmarks.mySummary() });
     },
   });
-}
-
-/**
- * Combined hook for all benchmark mutations
- * Provides create, update, and delete operations with unified state
- */
-export function useBenchmarkMutations(athleteId: number) {
-  const createMutation = useCreateBenchmarkMutation(athleteId);
-  const updateMutation = useUpdateBenchmarkMutation(athleteId);
-  const deleteMutation = useDeleteBenchmarkMutation(athleteId);
-
-  const isLoading =
-    createMutation.isPending ||
-    updateMutation.isPending ||
-    deleteMutation.isPending;
-
-  const error =
-    createMutation.error || updateMutation.error || deleteMutation.error;
 
   return {
     // Mutation functions
     createBenchmark: createMutation.mutateAsync,
-    updateBenchmark: (benchmarkId: number, data: UpdateBenchmarkRequest) =>
-      updateMutation.mutateAsync({ benchmarkId, data }),
+    updateBenchmark: (id: number, data: UpdateBenchmarkRequest) =>
+      updateMutation.mutateAsync({ id, data }),
     deleteBenchmark: deleteMutation.mutateAsync,
 
     // Loading states
-    isLoading,
     isCreating: createMutation.isPending,
     isUpdating: updateMutation.isPending,
     isDeleting: deleteMutation.isPending,
@@ -106,14 +52,57 @@ export function useBenchmarkMutations(athleteId: number) {
     updateSuccess: updateMutation.isSuccess,
     deleteSuccess: deleteMutation.isSuccess,
 
-    // Error state
-    error: error as ApiException | null,
+    // Errors
+    error: createMutation.error || updateMutation.error || deleteMutation.error,
 
-    // Reset mutation states
+    // Reset
     resetMutationState: () => {
       createMutation.reset();
       updateMutation.reset();
       deleteMutation.reset();
     },
   };
+}
+
+// Legacy exports for backward compatibility
+export function useCreateBenchmarkMutation(_athleteId?: number) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: CreateBenchmarkRequest) => benchmarkService.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.benchmarks.myBenchmarks() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.benchmarks.mySummary() });
+    },
+  });
+}
+
+export function useUpdateBenchmarkMutation(_athleteId?: number) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      benchmarkId,
+      data,
+    }: {
+      benchmarkId: number;
+      data: UpdateBenchmarkRequest;
+    }) => benchmarkService.update(benchmarkId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.benchmarks.myBenchmarks() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.benchmarks.mySummary() });
+    },
+  });
+}
+
+export function useDeleteBenchmarkMutation(_athleteId?: number) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (benchmarkId: number) => benchmarkService.delete(benchmarkId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.benchmarks.myBenchmarks() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.benchmarks.mySummary() });
+    },
+  });
 }

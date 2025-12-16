@@ -11,6 +11,7 @@ public class WodStratDbContext : DbContext, IWodStratDatabase
         : base(options) { }
 
     // DbSets
+    public DbSet<User> Users => Set<User>();
     public DbSet<Athlete> Athletes => Set<Athlete>();
     public DbSet<BenchmarkDefinition> BenchmarkDefinitions => Set<BenchmarkDefinition>();
     public DbSet<AthleteBenchmark> AthleteBenchmarks => Set<AthleteBenchmark>();
@@ -30,6 +31,60 @@ public class WodStratDbContext : DbContext, IWodStratDatabase
         modelBuilder.HasPostgresEnum<BenchmarkCategory>("benchmark_category");
         modelBuilder.HasPostgresEnum<BenchmarkMetricType>("benchmark_metric_type");
 
+        // Configure User entity
+        modelBuilder.Entity<User>(entity =>
+        {
+            entity.ToTable("users");
+
+            // Primary key (SERIAL INT - auto-generated)
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id)
+                .HasColumnName("id")
+                .ValueGeneratedOnAdd();
+
+            // Authentication fields
+            entity.Property(e => e.Email)
+                .HasColumnName("email")
+                .HasMaxLength(255)
+                .IsRequired();
+
+            entity.Property(e => e.PasswordHash)
+                .HasColumnName("password_hash")
+                .HasMaxLength(255)
+                .IsRequired();
+
+            // Account status
+            entity.Property(e => e.IsActive)
+                .HasColumnName("is_active")
+                .HasDefaultValue(true);
+
+            // Audit fields
+            entity.Property(e => e.CreatedAt)
+                .HasColumnName("created_at")
+                .HasDefaultValueSql("NOW()");
+
+            entity.Property(e => e.UpdatedAt)
+                .HasColumnName("updated_at")
+                .HasDefaultValueSql("NOW()");
+
+            // Indexes
+            entity.HasIndex(e => e.Email)
+                .HasDatabaseName("idx_users_email");
+
+            entity.HasIndex(e => e.IsActive)
+                .HasDatabaseName("idx_users_is_active")
+                .HasFilter("is_active = TRUE");
+
+            entity.HasIndex(e => new { e.Email, e.IsActive })
+                .HasDatabaseName("idx_users_email_active")
+                .HasFilter("is_active = TRUE");
+
+            // Unique constraint on email
+            entity.HasIndex(e => e.Email)
+                .HasDatabaseName("uq_users_email")
+                .IsUnique();
+        });
+
         // Configure Athlete entity
         modelBuilder.Entity<Athlete>(entity =>
         {
@@ -41,12 +96,23 @@ public class WodStratDbContext : DbContext, IWodStratDatabase
                 .HasColumnName("id")
                 .ValueGeneratedOnAdd();
 
-            // User relationship (future FK - now INT)
+            // User relationship
             entity.Property(e => e.UserId)
                 .HasColumnName("user_id");
             entity.HasIndex(e => e.UserId)
                 .HasDatabaseName("idx_athletes_user_id")
                 .HasFilter("user_id IS NOT NULL");
+
+            // One-to-one relationship with User
+            entity.HasOne(e => e.User)
+                .WithOne(u => u.Athlete)
+                .HasForeignKey<Athlete>(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Unique constraint on user_id
+            entity.HasIndex(e => e.UserId)
+                .HasDatabaseName("uq_athletes_user_id")
+                .IsUnique();
 
             // Profile fields
             entity.Property(e => e.Name)
