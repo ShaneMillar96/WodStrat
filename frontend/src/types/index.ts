@@ -52,3 +52,31 @@ export {
   TOTAL_BENCHMARK_COUNT,
   MINIMUM_BENCHMARK_REQUIREMENT,
 } from './benchmark';
+
+export type {
+  WorkoutType,
+  MovementCategory,
+  LoadUnit,
+  DistanceUnit,
+  MovementDefinition,
+  ParsingError,
+  ParsedMovement,
+  ParsedWorkout,
+  WorkoutMovement,
+  Workout,
+  ParseWorkoutRequest,
+  CreateWorkoutMovementRequest,
+  CreateWorkoutRequest,
+  UpdateWorkoutRequest,
+  WorkoutInputFormData,
+  WorkoutEditFormData,
+} from './workout';
+
+export {
+  WORKOUT_TYPE_LABELS,
+  MOVEMENT_CATEGORY_LABELS,
+  WORKOUT_TYPE_COLORS,
+  MOVEMENT_CATEGORY_COLORS,
+  ALL_WORKOUT_TYPES,
+  ALL_MOVEMENT_CATEGORIES,
+} from './workout';

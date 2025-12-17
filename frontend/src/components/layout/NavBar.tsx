@@ -29,6 +29,7 @@ export const NavBar: React.FC = () => {
                 >
                   Benchmarks
                 </NavLink>
+                <NavLink to="/workouts">Workouts</NavLink>
                 <NavLink to="/strategy">Strategy</NavLink>
                 <div className="ml-4 flex items-center border-l border-gray-200 pl-4">
                   {user?.email && (

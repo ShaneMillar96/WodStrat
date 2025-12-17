@@ -24,6 +24,10 @@ dataSourceBuilder.MapEnum<ExperienceLevel>("experience_level");
 dataSourceBuilder.MapEnum<AthleteGoal>("athlete_goal");
 dataSourceBuilder.MapEnum<BenchmarkCategory>("benchmark_category");
 dataSourceBuilder.MapEnum<BenchmarkMetricType>("benchmark_metric_type");
+dataSourceBuilder.MapEnum<WorkoutType>("workout_type");
+dataSourceBuilder.MapEnum<MovementCategory>("movement_category");
+dataSourceBuilder.MapEnum<LoadUnit>("load_unit");
+dataSourceBuilder.MapEnum<DistanceUnit>("distance_unit");
 var dataSource = dataSourceBuilder.Build();
 
 builder.Services.AddDbContext<WodStratDbContext>(options =>
@@ -73,6 +77,9 @@ builder.Services.AddScoped<IAthleteService, AthleteService>();
 builder.Services.AddScoped<IBenchmarkService, BenchmarkService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+builder.Services.AddScoped<IMovementDefinitionService, MovementDefinitionService>();
+builder.Services.AddScoped<IWorkoutParsingService, WorkoutParsingService>();
+builder.Services.AddScoped<IWorkoutService, WorkoutService>();
 
 // FluentValidation
 builder.Services.AddFluentValidationAutoValidation();

@@ -40,4 +40,9 @@ public class User
     /// The athlete profile associated with this user (one-to-one).
     /// </summary>
     public Athlete? Athlete { get; set; }
+
+    /// <summary>
+    /// Collection of workouts owned by this user.
+    /// </summary>
+    public ICollection<Workout> Workouts { get; set; } = new List<Workout>();
 }

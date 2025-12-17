@@ -6,11 +6,13 @@ import { RegisterPage } from './pages/RegisterPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { BenchmarksPage } from './pages/BenchmarksPage';
 import { StrategyPage } from './pages/StrategyPage';
+import { WorkoutsPage } from './pages/WorkoutsPage';
+import { WorkoutInputPage } from './pages/WorkoutInputPage';
 
 /**
  * Application route definitions
  * Public routes: /login, /register
- * Protected routes: /profile, /profile/new, /benchmarks, /strategy
+ * Protected routes: /profile, /profile/new, /benchmarks, /strategy, /workouts, /workouts/new
  */
 const router = createBrowserRouter([
   // Public routes (no layout)
@@ -50,6 +52,14 @@ const router = createBrowserRouter([
       {
         path: '/strategy',
         element: <StrategyPage />,
+      },
+      {
+        path: '/workouts',
+        element: <WorkoutsPage />,
+      },
+      {
+        path: '/workouts/new',
+        element: <WorkoutInputPage />,
       },
       {
         // Catch-all route for 404

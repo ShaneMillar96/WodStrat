@@ -15,6 +15,10 @@ public class WodStratDbContext : DbContext, IWodStratDatabase
     public DbSet<Athlete> Athletes => Set<Athlete>();
     public DbSet<BenchmarkDefinition> BenchmarkDefinitions => Set<BenchmarkDefinition>();
     public DbSet<AthleteBenchmark> AthleteBenchmarks => Set<AthleteBenchmark>();
+    public DbSet<MovementDefinition> MovementDefinitions => Set<MovementDefinition>();
+    public DbSet<MovementAlias> MovementAliases => Set<MovementAlias>();
+    public DbSet<Workout> Workouts => Set<Workout>();
+    public DbSet<WorkoutMovement> WorkoutMovements => Set<WorkoutMovement>();
 
     public IQueryable<T> Get<T>() where T : class => Set<T>();
     public new void Add<T>(T entity) where T : class => Set<T>().Add(entity);
@@ -30,6 +34,10 @@ public class WodStratDbContext : DbContext, IWodStratDatabase
         modelBuilder.HasPostgresEnum<AthleteGoal>("athlete_goal");
         modelBuilder.HasPostgresEnum<BenchmarkCategory>("benchmark_category");
         modelBuilder.HasPostgresEnum<BenchmarkMetricType>("benchmark_metric_type");
+        modelBuilder.HasPostgresEnum<WorkoutType>("workout_type");
+        modelBuilder.HasPostgresEnum<MovementCategory>("movement_category");
+        modelBuilder.HasPostgresEnum<LoadUnit>("load_unit");
+        modelBuilder.HasPostgresEnum<DistanceUnit>("distance_unit");
 
         // Configure User entity
         modelBuilder.Entity<User>(entity =>
@@ -317,6 +325,265 @@ public class WodStratDbContext : DbContext, IWodStratDatabase
             entity.HasIndex(e => new { e.AthleteId, e.BenchmarkDefinitionId })
                 .HasDatabaseName("uq_athlete_benchmarks_athlete_definition")
                 .IsUnique();
+        });
+
+        // Configure MovementDefinition entity
+        modelBuilder.Entity<MovementDefinition>(entity =>
+        {
+            entity.ToTable("movement_definitions");
+
+            // Primary key
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id)
+                .HasColumnName("id")
+                .ValueGeneratedOnAdd();
+
+            // Movement identification
+            entity.Property(e => e.CanonicalName)
+                .HasColumnName("canonical_name")
+                .HasMaxLength(100)
+                .IsRequired();
+
+            entity.Property(e => e.DisplayName)
+                .HasColumnName("display_name")
+                .HasMaxLength(100)
+                .IsRequired();
+
+            // Classification
+            entity.Property(e => e.Category)
+                .HasColumnName("category")
+                .IsRequired();
+
+            entity.Property(e => e.Description)
+                .HasColumnName("description")
+                .HasMaxLength(500);
+
+            // Status
+            entity.Property(e => e.IsActive)
+                .HasColumnName("is_active")
+                .HasDefaultValue(true);
+
+            // Audit fields
+            entity.Property(e => e.CreatedAt)
+                .HasColumnName("created_at")
+                .HasDefaultValueSql("NOW()");
+
+            // Indexes
+            entity.HasIndex(e => e.CanonicalName)
+                .HasDatabaseName("uq_movement_definitions_canonical_name")
+                .IsUnique();
+
+            entity.HasIndex(e => e.Category)
+                .HasDatabaseName("idx_movement_definitions_category");
+
+            entity.HasIndex(e => e.IsActive)
+                .HasDatabaseName("idx_movement_definitions_is_active")
+                .HasFilter("is_active = TRUE");
+        });
+
+        // Configure MovementAlias entity
+        modelBuilder.Entity<MovementAlias>(entity =>
+        {
+            entity.ToTable("movement_aliases");
+
+            // Primary key
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id)
+                .HasColumnName("id")
+                .ValueGeneratedOnAdd();
+
+            // Foreign key
+            entity.Property(e => e.MovementDefinitionId)
+                .HasColumnName("movement_definition_id")
+                .IsRequired();
+
+            // Alias data
+            entity.Property(e => e.Alias)
+                .HasColumnName("alias")
+                .HasMaxLength(100)
+                .IsRequired();
+
+            // Audit fields
+            entity.Property(e => e.CreatedAt)
+                .HasColumnName("created_at")
+                .HasDefaultValueSql("NOW()");
+
+            // Relationships
+            entity.HasOne(e => e.MovementDefinition)
+                .WithMany(md => md.Aliases)
+                .HasForeignKey(e => e.MovementDefinitionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Indexes
+            entity.HasIndex(e => e.Alias)
+                .HasDatabaseName("uq_movement_aliases_alias")
+                .IsUnique();
+
+            entity.HasIndex(e => e.MovementDefinitionId)
+                .HasDatabaseName("idx_movement_aliases_definition_id");
+        });
+
+        // Configure Workout entity
+        modelBuilder.Entity<Workout>(entity =>
+        {
+            entity.ToTable("workouts");
+
+            // Primary key
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id)
+                .HasColumnName("id")
+                .ValueGeneratedOnAdd();
+
+            // Foreign key
+            entity.Property(e => e.UserId)
+                .HasColumnName("user_id")
+                .IsRequired();
+
+            // Workout identification
+            entity.Property(e => e.Name)
+                .HasColumnName("name")
+                .HasMaxLength(200);
+
+            entity.Property(e => e.WorkoutType)
+                .HasColumnName("workout_type")
+                .IsRequired();
+
+            // Raw and parsed text
+            entity.Property(e => e.OriginalText)
+                .HasColumnName("original_text")
+                .IsRequired();
+
+            entity.Property(e => e.ParsedDescription)
+                .HasColumnName("parsed_description");
+
+            // Time domain
+            entity.Property(e => e.TimeCapSeconds)
+                .HasColumnName("time_cap_seconds");
+
+            entity.Property(e => e.RoundCount)
+                .HasColumnName("round_count");
+
+            entity.Property(e => e.IntervalDurationSeconds)
+                .HasColumnName("interval_duration_seconds");
+
+            // Soft delete
+            entity.Property(e => e.IsDeleted)
+                .HasColumnName("is_deleted")
+                .HasDefaultValue(false);
+
+            // Audit fields
+            entity.Property(e => e.CreatedAt)
+                .HasColumnName("created_at")
+                .HasDefaultValueSql("NOW()");
+
+            entity.Property(e => e.UpdatedAt)
+                .HasColumnName("updated_at")
+                .HasDefaultValueSql("NOW()");
+
+            // Relationships
+            entity.HasOne(e => e.User)
+                .WithMany(u => u.Workouts)
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Indexes
+            entity.HasIndex(e => e.UserId)
+                .HasDatabaseName("idx_workouts_user_id");
+
+            entity.HasIndex(e => e.WorkoutType)
+                .HasDatabaseName("idx_workouts_workout_type");
+
+            entity.HasIndex(e => e.IsDeleted)
+                .HasDatabaseName("idx_workouts_is_deleted")
+                .HasFilter("is_deleted = FALSE");
+
+            entity.HasIndex(e => new { e.UserId, e.IsDeleted })
+                .HasDatabaseName("idx_workouts_user_active")
+                .HasFilter("is_deleted = FALSE");
+
+            entity.HasIndex(e => e.CreatedAt)
+                .HasDatabaseName("idx_workouts_created_at")
+                .IsDescending();
+        });
+
+        // Configure WorkoutMovement entity
+        modelBuilder.Entity<WorkoutMovement>(entity =>
+        {
+            entity.ToTable("workout_movements");
+
+            // Primary key
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id)
+                .HasColumnName("id")
+                .ValueGeneratedOnAdd();
+
+            // Foreign keys
+            entity.Property(e => e.WorkoutId)
+                .HasColumnName("workout_id")
+                .IsRequired();
+
+            entity.Property(e => e.MovementDefinitionId)
+                .HasColumnName("movement_definition_id")
+                .IsRequired();
+
+            // Ordering
+            entity.Property(e => e.SequenceOrder)
+                .HasColumnName("sequence_order")
+                .IsRequired();
+
+            // Movement specifications
+            entity.Property(e => e.RepCount)
+                .HasColumnName("rep_count");
+
+            entity.Property(e => e.LoadValue)
+                .HasColumnName("load_value")
+                .HasPrecision(8, 2);
+
+            entity.Property(e => e.LoadUnit)
+                .HasColumnName("load_unit");
+
+            entity.Property(e => e.DistanceValue)
+                .HasColumnName("distance_value")
+                .HasPrecision(8, 2);
+
+            entity.Property(e => e.DistanceUnit)
+                .HasColumnName("distance_unit");
+
+            entity.Property(e => e.Calories)
+                .HasColumnName("calories");
+
+            entity.Property(e => e.DurationSeconds)
+                .HasColumnName("duration_seconds");
+
+            entity.Property(e => e.Notes)
+                .HasColumnName("notes")
+                .HasMaxLength(500);
+
+            // Audit fields
+            entity.Property(e => e.CreatedAt)
+                .HasColumnName("created_at")
+                .HasDefaultValueSql("NOW()");
+
+            // Relationships
+            entity.HasOne(e => e.Workout)
+                .WithMany(w => w.Movements)
+                .HasForeignKey(e => e.WorkoutId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.MovementDefinition)
+                .WithMany(md => md.WorkoutMovements)
+                .HasForeignKey(e => e.MovementDefinitionId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Indexes
+            entity.HasIndex(e => e.WorkoutId)
+                .HasDatabaseName("idx_workout_movements_workout_id");
+
+            entity.HasIndex(e => e.MovementDefinitionId)
+                .HasDatabaseName("idx_workout_movements_definition_id");
+
+            entity.HasIndex(e => new { e.WorkoutId, e.SequenceOrder })
+                .HasDatabaseName("idx_workout_movements_workout_order");
         });
     }
 }
