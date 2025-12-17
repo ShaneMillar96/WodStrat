@@ -21,6 +21,11 @@ public class MovementAlias
     public string Alias { get; set; } = string.Empty;
 
     /// <summary>
+    /// Lowercase, no special characters version of alias for matching.
+    /// </summary>
+    public string AliasNormalized { get; set; } = string.Empty;
+
+    /// <summary>
     /// Record creation timestamp.
     /// </summary>
     public DateTime CreatedAt { get; set; }

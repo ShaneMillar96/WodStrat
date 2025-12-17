@@ -1,12 +1,15 @@
+// Re-export movement types from dedicated movement.ts file for backward compatibility
+export type { MovementCategory, MovementDefinition } from './movement';
+export {
+  MOVEMENT_CATEGORY_LABELS,
+  MOVEMENT_CATEGORY_COLORS,
+  ALL_MOVEMENT_CATEGORIES,
+} from './movement';
+
 /**
  * Workout type enum values matching backend WorkoutType.cs
  */
 export type WorkoutType = 'Amrap' | 'ForTime' | 'Emom' | 'Intervals' | 'Rounds';
-
-/**
- * Movement category enum values matching backend MovementCategory.cs
- */
-export type MovementCategory = 'Weightlifting' | 'Gymnastics' | 'Cardio' | 'Strongman';
 
 /**
  * Load unit enum values matching backend LoadUnit.cs
@@ -17,18 +20,6 @@ export type LoadUnit = 'Kg' | 'Lb' | 'Pood';
  * Distance unit enum values matching backend DistanceUnit.cs
  */
 export type DistanceUnit = 'M' | 'Km' | 'Ft' | 'Mi' | 'Cal';
-
-/**
- * Movement definition as returned from the API
- */
-export interface MovementDefinition {
-  id: number;
-  canonicalName: string;
-  displayName: string;
-  category: MovementCategory;
-  description: string | null;
-  aliases: string[];
-}
 
 /**
  * Parsing error as returned from the API
@@ -201,16 +192,6 @@ export const WORKOUT_TYPE_LABELS: Record<WorkoutType, string> = {
 };
 
 /**
- * Display labels for movement category options
- */
-export const MOVEMENT_CATEGORY_LABELS: Record<MovementCategory, string> = {
-  Weightlifting: 'Weightlifting',
-  Gymnastics: 'Gymnastics',
-  Cardio: 'Cardio',
-  Strongman: 'Strongman',
-};
-
-/**
  * Badge color mapping for workout types
  */
 export const WORKOUT_TYPE_COLORS: Record<WorkoutType, string> = {
@@ -222,16 +203,6 @@ export const WORKOUT_TYPE_COLORS: Record<WorkoutType, string> = {
 };
 
 /**
- * Badge color mapping for movement categories
- */
-export const MOVEMENT_CATEGORY_COLORS: Record<MovementCategory, string> = {
-  Weightlifting: 'red',
-  Gymnastics: 'green',
-  Cardio: 'blue',
-  Strongman: 'purple',
-};
-
-/**
  * All workout types for filtering/selection
  */
 export const ALL_WORKOUT_TYPES: WorkoutType[] = [
@@ -240,14 +211,4 @@ export const ALL_WORKOUT_TYPES: WorkoutType[] = [
   'Emom',
   'Intervals',
   'Rounds',
-];
-
-/**
- * All movement categories for filtering
- */
-export const ALL_MOVEMENT_CATEGORIES: MovementCategory[] = [
-  'Weightlifting',
-  'Gymnastics',
-  'Cardio',
-  'Strongman',
 ];

@@ -590,6 +590,402 @@ public class MovementDefinitionServiceTests
 
     #endregion
 
+    #region NormalizeMovementNameAsync Tests (WOD-12)
+
+    [Fact]
+    public async Task NormalizeMovementNameAsync_ExactAlias_ReturnsCanonicalName()
+    {
+        // Arrange
+        var movement = CreateMovementDefinition("toes_to_bar", "Toes-to-Bar", MovementCategory.Gymnastics, true);
+        movement.Aliases = new List<MovementAlias>
+        {
+            new() { Id = 1, Alias = "t2b", MovementDefinitionId = movement.Id }
+        };
+
+        var queryable = new[] { movement }.AsQueryable().BuildMock();
+        _database.Get<MovementDefinition>().Returns(queryable);
+
+        // Act
+        var result = await _sut.NormalizeMovementNameAsync("t2b");
+
+        // Assert
+        result.Should().Be("toes_to_bar");
+    }
+
+    [Fact]
+    public async Task NormalizeMovementNameAsync_CaseInsensitive()
+    {
+        // Arrange
+        var movement = CreateMovementDefinition("toes_to_bar", "Toes-to-Bar", MovementCategory.Gymnastics, true);
+        movement.Aliases = new List<MovementAlias>
+        {
+            new() { Id = 1, Alias = "T2B", MovementDefinitionId = movement.Id }
+        };
+
+        var queryable = new[] { movement }.AsQueryable().BuildMock();
+        _database.Get<MovementDefinition>().Returns(queryable);
+
+        // Act
+        var result = await _sut.NormalizeMovementNameAsync("t2b");
+
+        // Assert
+        result.Should().Be("toes_to_bar");
+    }
+
+    [Fact]
+    public async Task NormalizeMovementNameAsync_HyphenatedInput_NormalizesAndMatches()
+    {
+        // Arrange
+        var movement = CreateMovementDefinition("toes_to_bar", "Toes-to-Bar", MovementCategory.Gymnastics, true);
+        movement.Aliases = new List<MovementAlias>
+        {
+            new() { Id = 1, Alias = "toes-to-bar", MovementDefinitionId = movement.Id }
+        };
+
+        var queryable = new[] { movement }.AsQueryable().BuildMock();
+        _database.Get<MovementDefinition>().Returns(queryable);
+
+        // Act
+        var result = await _sut.NormalizeMovementNameAsync("toes-to-bar");
+
+        // Assert
+        result.Should().Be("toes_to_bar");
+    }
+
+    [Fact]
+    public async Task NormalizeMovementNameAsync_SpacedInput_NormalizesAndMatches()
+    {
+        // Arrange
+        var movement = CreateMovementDefinition("toes_to_bar", "Toes-to-Bar", MovementCategory.Gymnastics, true);
+        movement.Aliases = new List<MovementAlias>
+        {
+            new() { Id = 1, Alias = "toes to bar", MovementDefinitionId = movement.Id }
+        };
+
+        var queryable = new[] { movement }.AsQueryable().BuildMock();
+        _database.Get<MovementDefinition>().Returns(queryable);
+
+        // Act
+        var result = await _sut.NormalizeMovementNameAsync("toes to bar");
+
+        // Assert
+        result.Should().Be("toes_to_bar");
+    }
+
+    [Fact]
+    public async Task NormalizeMovementNameAsync_NotFound_ReturnsNull()
+    {
+        // Arrange
+        var queryable = Array.Empty<MovementDefinition>().AsQueryable().BuildMock();
+        _database.Get<MovementDefinition>().Returns(queryable);
+
+        // Act
+        var result = await _sut.NormalizeMovementNameAsync("nonexistent");
+
+        // Assert
+        result.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task NormalizeMovementNameAsync_EmptyInput_ReturnsNull()
+    {
+        // Arrange & Act
+        var result = await _sut.NormalizeMovementNameAsync("");
+
+        // Assert
+        result.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task NormalizeMovementNameAsync_WhitespaceInput_ReturnsNull()
+    {
+        // Arrange & Act
+        var result = await _sut.NormalizeMovementNameAsync("   ");
+
+        // Assert
+        result.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task NormalizeMovementNameAsync_PluralVariation_Matches()
+    {
+        // Arrange
+        var movement = CreateMovementDefinition("pull_up", "Pull-up", MovementCategory.Gymnastics, true);
+        movement.Aliases = new List<MovementAlias>
+        {
+            new() { Id = 1, Alias = "pullup", MovementDefinitionId = movement.Id }
+        };
+
+        var queryable = new[] { movement }.AsQueryable().BuildMock();
+        _database.Get<MovementDefinition>().Returns(queryable);
+
+        // Act
+        var result = await _sut.NormalizeMovementNameAsync("pullups");
+
+        // Assert
+        result.Should().Be("pull_up");
+    }
+
+    #endregion
+
+    #region SearchMovementsAsync Tests (WOD-12)
+
+    [Fact]
+    public async Task SearchMovementsAsync_ExactMatch_ReturnsHighestRelevance()
+    {
+        // Arrange
+        var movement = CreateMovementDefinition("toes_to_bar", "Toes-to-Bar", MovementCategory.Gymnastics, true);
+        var queryable = new[] { movement }.AsQueryable().BuildMock();
+        _database.Get<MovementDefinition>().Returns(queryable);
+
+        // Act
+        var result = await _sut.SearchMovementsAsync("toes_to_bar");
+
+        // Assert
+        result.Should().HaveCount(1);
+        result[0].CanonicalName.Should().Be("toes_to_bar");
+    }
+
+    [Fact]
+    public async Task SearchMovementsAsync_PartialMatch_ReturnsResults()
+    {
+        // Arrange
+        var movement1 = CreateMovementDefinition("pull_up", "Pull-up", MovementCategory.Gymnastics, true);
+        var movement2 = CreateMovementDefinition("deadlift", "Deadlift", MovementCategory.Weightlifting, true);
+
+        var queryable = new[] { movement1, movement2 }.AsQueryable().BuildMock();
+        _database.Get<MovementDefinition>().Returns(queryable);
+
+        // Act
+        var result = await _sut.SearchMovementsAsync("pull");
+
+        // Assert
+        result.Should().HaveCount(1);
+        result[0].CanonicalName.Should().Be("pull_up");
+    }
+
+    [Fact]
+    public async Task SearchMovementsAsync_EmptyQuery_ReturnsEmptyList()
+    {
+        // Arrange & Act
+        var result = await _sut.SearchMovementsAsync("");
+
+        // Assert
+        result.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task SearchMovementsAsync_WhitespaceQuery_ReturnsEmptyList()
+    {
+        // Arrange & Act
+        var result = await _sut.SearchMovementsAsync("   ");
+
+        // Assert
+        result.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task SearchMovementsAsync_NoMatches_ReturnsEmptyList()
+    {
+        // Arrange
+        var movement = CreateMovementDefinition("pull_up", "Pull-up", MovementCategory.Gymnastics, true);
+        var queryable = new[] { movement }.AsQueryable().BuildMock();
+        _database.Get<MovementDefinition>().Returns(queryable);
+
+        // Act
+        var result = await _sut.SearchMovementsAsync("xyz123");
+
+        // Assert
+        result.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task SearchMovementsAsync_AliasMatch_ReturnsMovement()
+    {
+        // Arrange
+        var movement = CreateMovementDefinition("toes_to_bar", "Toes-to-Bar", MovementCategory.Gymnastics, true);
+        movement.Aliases = new List<MovementAlias>
+        {
+            new() { Id = 1, Alias = "t2b", MovementDefinitionId = movement.Id }
+        };
+
+        var queryable = new[] { movement }.AsQueryable().BuildMock();
+        _database.Get<MovementDefinition>().Returns(queryable);
+
+        // Act
+        var result = await _sut.SearchMovementsAsync("t2b");
+
+        // Assert
+        result.Should().HaveCount(1);
+        result[0].CanonicalName.Should().Be("toes_to_bar");
+    }
+
+    [Fact]
+    public async Task SearchMovementsAsync_MultipleMatches_OrderedByRelevance()
+    {
+        // Arrange
+        var exactMatch = CreateMovementDefinition("pull_up", "Pull-up", MovementCategory.Gymnastics, true);
+        var partialMatch = CreateMovementDefinition("sumo_deadlift_high_pull", "Sumo Deadlift High Pull", MovementCategory.Weightlifting, true);
+
+        var queryable = new[] { exactMatch, partialMatch }.AsQueryable().BuildMock();
+        _database.Get<MovementDefinition>().Returns(queryable);
+
+        // Act
+        var result = await _sut.SearchMovementsAsync("pull");
+
+        // Assert
+        result.Should().HaveCount(2);
+        // Exact match on "pull" prefix should be ranked higher
+        result[0].CanonicalName.Should().Be("pull_up");
+    }
+
+    #endregion
+
+    #region GetMovementByIdAsync Tests (WOD-12)
+
+    [Fact]
+    public async Task GetMovementByIdAsync_ExistingId_ReturnsMovement()
+    {
+        // Arrange
+        var movement = CreateMovementDefinition("pull_up", "Pull-up", MovementCategory.Gymnastics, true);
+        var expectedId = movement.Id;
+
+        var queryable = new[] { movement }.AsQueryable().BuildMock();
+        _database.Get<MovementDefinition>().Returns(queryable);
+
+        // Act
+        var result = await _sut.GetMovementByIdAsync(expectedId);
+
+        // Assert
+        result.Should().NotBeNull();
+        result!.Id.Should().Be(expectedId);
+        result.CanonicalName.Should().Be("pull_up");
+    }
+
+    [Fact]
+    public async Task GetMovementByIdAsync_NonExistingId_ReturnsNull()
+    {
+        // Arrange
+        var queryable = Array.Empty<MovementDefinition>().AsQueryable().BuildMock();
+        _database.Get<MovementDefinition>().Returns(queryable);
+
+        // Act
+        var result = await _sut.GetMovementByIdAsync(999);
+
+        // Assert
+        result.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task GetMovementByIdAsync_InactiveMovement_ReturnsNull()
+    {
+        // Arrange
+        var movement = CreateMovementDefinition("pull_up", "Pull-up", MovementCategory.Gymnastics, false);
+        var expectedId = movement.Id;
+
+        // Only active movements are cached
+        var queryable = Array.Empty<MovementDefinition>().AsQueryable().BuildMock();
+        _database.Get<MovementDefinition>().Returns(queryable);
+
+        // Act
+        var result = await _sut.GetMovementByIdAsync(expectedId);
+
+        // Assert
+        result.Should().BeNull();
+    }
+
+    #endregion
+
+    #region GetMovementsByCategoryAsync(enum) Tests (WOD-12)
+
+    [Fact]
+    public async Task GetMovementsByCategoryAsync_EnumParameter_ReturnsFilteredMovements()
+    {
+        // Arrange
+        var gymnastics = CreateMovementDefinition("pull_up", "Pull-up", MovementCategory.Gymnastics, true);
+        var weightlifting = CreateMovementDefinition("deadlift", "Deadlift", MovementCategory.Weightlifting, true);
+
+        var queryable = new[] { gymnastics, weightlifting }.AsQueryable().BuildMock();
+        _database.Get<MovementDefinition>().Returns(queryable);
+
+        // Act
+        var result = await _sut.GetMovementsByCategoryAsync(MovementCategory.Gymnastics);
+
+        // Assert
+        result.Should().HaveCount(1);
+        result.First().CanonicalName.Should().Be("pull_up");
+    }
+
+    [Fact]
+    public async Task GetMovementsByCategoryAsync_AccessoryCategory_ReturnsAccessoryMovements()
+    {
+        // Arrange
+        var accessory = CreateMovementDefinition("plank", "Plank", MovementCategory.Accessory, true);
+        var gymnastics = CreateMovementDefinition("pull_up", "Pull-up", MovementCategory.Gymnastics, true);
+
+        var queryable = new[] { accessory, gymnastics }.AsQueryable().BuildMock();
+        _database.Get<MovementDefinition>().Returns(queryable);
+
+        // Act
+        var result = await _sut.GetMovementsByCategoryAsync(MovementCategory.Accessory);
+
+        // Assert
+        result.Should().HaveCount(1);
+        result.First().CanonicalName.Should().Be("plank");
+    }
+
+    [Fact]
+    public async Task GetMovementsByCategoryAsync_Enum_ExcludesInactive()
+    {
+        // Arrange
+        var active = CreateMovementDefinition("pull_up", "Pull-up", MovementCategory.Gymnastics, true);
+        var inactive = CreateMovementDefinition("burpee", "Burpee", MovementCategory.Gymnastics, false);
+
+        var queryable = new[] { active, inactive }.AsQueryable().BuildMock();
+        _database.Get<MovementDefinition>().Returns(queryable);
+
+        // Act
+        var result = await _sut.GetMovementsByCategoryAsync(MovementCategory.Gymnastics);
+
+        // Assert
+        result.Should().HaveCount(1);
+        result.First().CanonicalName.Should().Be("pull_up");
+    }
+
+    #endregion
+
+    #region InvalidateCache Tests (WOD-12)
+
+    [Fact]
+    public async Task InvalidateCache_ClearsCache_NextCallReloadsFromDatabase()
+    {
+        // Arrange
+        var movement = CreateMovementDefinition("pull_up", "Pull-up", MovementCategory.Gymnastics, true);
+        var queryable = new[] { movement }.AsQueryable().BuildMock();
+        _database.Get<MovementDefinition>().Returns(queryable);
+
+        // Load cache first
+        var result1 = await _sut.GetAliasLookupAsync();
+        result1.Should().NotBeEmpty();
+
+        // Act - Invalidate cache
+        _sut.InvalidateCache();
+
+        // Re-setup mock after clearing (simulate database returning updated data)
+        var updatedMovement = CreateMovementDefinition("deadlift", "Deadlift", MovementCategory.Weightlifting, true);
+        var newQueryable = new[] { updatedMovement }.AsQueryable().BuildMock();
+        _database.Get<MovementDefinition>().Returns(newQueryable);
+
+        // Access again
+        var result2 = await _sut.GetAliasLookupAsync();
+
+        // Assert - Cache should now contain the new data after invalidation
+        result2.Should().ContainKey("deadlift");
+        result2.Should().NotContainKey("pull_up"); // Old data should be gone
+    }
+
+    #endregion
+
     #region Helper Methods
 
     private MovementDefinition CreateMovementDefinition(string canonicalName, string displayName, MovementCategory category, bool isActive)

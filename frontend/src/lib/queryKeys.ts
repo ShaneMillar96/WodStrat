@@ -55,6 +55,10 @@ export const queryKeys = {
     details: () => [...queryKeys.movements.all, 'detail'] as const,
     detail: (canonicalName: string) =>
       [...queryKeys.movements.details(), canonicalName] as const,
+    // Lookup by alias (returns single result or 404)
+    lookup: (alias: string) =>
+      [...queryKeys.movements.all, 'lookup', alias] as const,
+    // Search query (returns result or null)
     search: (query: string) =>
       [...queryKeys.movements.all, 'search', query] as const,
   },

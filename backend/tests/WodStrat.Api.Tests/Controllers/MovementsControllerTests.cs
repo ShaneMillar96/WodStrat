@@ -369,6 +369,130 @@ public class MovementsControllerTests
 
     #endregion
 
+    #region Lookup Tests (WOD-12)
+
+    [Fact]
+    public async Task Lookup_ValidAlias_ReturnsOkWithMovement()
+    {
+        // Arrange
+        var movement = CreateMovementDto(1, "toes_to_bar", "Toes-to-Bar", "Gymnastics");
+
+        _movementDefinitionService.FindMovementByAliasAsync("t2b", Arg.Any<CancellationToken>())
+            .Returns(movement);
+
+        // Act
+        var result = await _sut.Lookup("t2b", CancellationToken.None);
+
+        // Assert
+        var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
+        var response = okResult.Value.Should().BeOfType<MovementDefinitionResponse>().Subject;
+        response.CanonicalName.Should().Be("toes_to_bar");
+        response.DisplayName.Should().Be("Toes-to-Bar");
+    }
+
+    [Fact]
+    public async Task Lookup_AliasNotFound_ReturnsNotFound()
+    {
+        // Arrange
+        _movementDefinitionService.FindMovementByAliasAsync("unknown", Arg.Any<CancellationToken>())
+            .Returns((MovementDefinitionDto?)null);
+
+        // Act
+        var result = await _sut.Lookup("unknown", CancellationToken.None);
+
+        // Assert
+        var notFoundResult = result.Result.Should().BeOfType<NotFoundObjectResult>().Subject;
+        notFoundResult.StatusCode.Should().Be(404);
+    }
+
+    [Fact]
+    public async Task Lookup_EmptyAlias_ReturnsBadRequest()
+    {
+        // Arrange & Act
+        var result = await _sut.Lookup("", CancellationToken.None);
+
+        // Assert
+        var badRequestResult = result.Result.Should().BeOfType<BadRequestObjectResult>().Subject;
+        badRequestResult.StatusCode.Should().Be(400);
+    }
+
+    [Fact]
+    public async Task Lookup_WhitespaceAlias_ReturnsBadRequest()
+    {
+        // Arrange & Act
+        var result = await _sut.Lookup("   ", CancellationToken.None);
+
+        // Assert
+        var badRequestResult = result.Result.Should().BeOfType<BadRequestObjectResult>().Subject;
+        badRequestResult.StatusCode.Should().Be(400);
+    }
+
+    [Fact]
+    public async Task Lookup_NullAlias_ReturnsBadRequest()
+    {
+        // Arrange & Act
+        var result = await _sut.Lookup(null!, CancellationToken.None);
+
+        // Assert
+        var badRequestResult = result.Result.Should().BeOfType<BadRequestObjectResult>().Subject;
+        badRequestResult.StatusCode.Should().Be(400);
+    }
+
+    [Fact]
+    public async Task Lookup_PassesAliasToService()
+    {
+        // Arrange
+        var movement = CreateMovementDto(1, "muscle_up", "Muscle-up", "Gymnastics");
+
+        _movementDefinitionService.FindMovementByAliasAsync("MU", Arg.Any<CancellationToken>())
+            .Returns(movement);
+
+        // Act
+        await _sut.Lookup("MU", CancellationToken.None);
+
+        // Assert
+        await _movementDefinitionService.Received(1).FindMovementByAliasAsync("MU", Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Lookup_WithAliases_ReturnsAliasesInResponse()
+    {
+        // Arrange
+        var movement = CreateMovementDto(1, "toes_to_bar", "Toes-to-Bar", "Gymnastics");
+        movement.Aliases = new List<string> { "t2b", "ttb", "toes-to-bar" };
+
+        _movementDefinitionService.FindMovementByAliasAsync("t2b", Arg.Any<CancellationToken>())
+            .Returns(movement);
+
+        // Act
+        var result = await _sut.Lookup("t2b", CancellationToken.None);
+
+        // Assert
+        var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
+        var response = okResult.Value.Should().BeOfType<MovementDefinitionResponse>().Subject;
+        response.Aliases.Should().HaveCount(3);
+        response.Aliases.Should().Contain("t2b");
+        response.Aliases.Should().Contain("ttb");
+    }
+
+    [Fact]
+    public async Task Lookup_NotFoundErrorIncludesAlias()
+    {
+        // Arrange
+        _movementDefinitionService.FindMovementByAliasAsync("xyz", Arg.Any<CancellationToken>())
+            .Returns((MovementDefinitionDto?)null);
+
+        // Act
+        var result = await _sut.Lookup("xyz", CancellationToken.None);
+
+        // Assert
+        var notFoundResult = result.Result.Should().BeOfType<NotFoundObjectResult>().Subject;
+        var errorValue = notFoundResult.Value;
+        errorValue.Should().NotBeNull();
+    }
+
+    #endregion
+
     #region Helper Methods
 
     private MovementDefinitionDto CreateMovementDto(int id, string canonicalName, string displayName, string category)

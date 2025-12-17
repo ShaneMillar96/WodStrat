@@ -5,7 +5,6 @@ import type {
   ParseWorkoutRequest,
   CreateWorkoutRequest,
   UpdateWorkoutRequest,
-  MovementDefinition,
 } from '../types/workout';
 
 /**
@@ -65,39 +64,5 @@ export const workoutService = {
    */
   delete: async (id: number): Promise<void> => {
     return api.delete(`/workouts/${id}`);
-  },
-};
-
-/**
- * Movement API service
- * Provides methods for movement definition queries
- */
-export const movementService = {
-  /**
-   * Get all movement definitions
-   * @param category - Optional category filter
-   * @returns List of movement definitions
-   */
-  getAll: async (category?: string): Promise<MovementDefinition[]> => {
-    const endpoint = category ? `/movements?category=${category}` : '/movements';
-    return api.get<MovementDefinition[]>(endpoint);
-  },
-
-  /**
-   * Get a movement definition by canonical name
-   * @param canonicalName - The canonical name
-   * @returns The movement definition
-   */
-  getByCanonicalName: async (canonicalName: string): Promise<MovementDefinition> => {
-    return api.get<MovementDefinition>(`/movements/${canonicalName}`);
-  },
-
-  /**
-   * Search for a movement by alias or name
-   * @param query - The search term
-   * @returns The matched movement definition or null
-   */
-  search: async (query: string): Promise<MovementDefinition | null> => {
-    return api.get<MovementDefinition | null>(`/movements/search?query=${encodeURIComponent(query)}`);
   },
 };

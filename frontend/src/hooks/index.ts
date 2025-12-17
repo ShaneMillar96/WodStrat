@@ -41,5 +41,8 @@ export { useWorkout } from './useWorkout';
 
 export {
   useMovementsQuery,
+  useMovementQuery,
+  useMovementLookup,
+  useMovementSearch,
   useMovements,
 } from './useMovements';

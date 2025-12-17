@@ -53,12 +53,24 @@ export {
   MINIMUM_BENCHMARK_REQUIREMENT,
 } from './benchmark';
 
+// Movement types (dedicated file)
+export type {
+  MovementCategory,
+  MovementDefinition,
+  MovementLookupResult,
+} from './movement';
+
+export {
+  MOVEMENT_CATEGORY_LABELS,
+  MOVEMENT_CATEGORY_COLORS,
+  ALL_MOVEMENT_CATEGORIES,
+} from './movement';
+
+// Workout types
 export type {
   WorkoutType,
-  MovementCategory,
   LoadUnit,
   DistanceUnit,
-  MovementDefinition,
   ParsingError,
   ParsedMovement,
   ParsedWorkout,
@@ -74,9 +86,6 @@ export type {
 
 export {
   WORKOUT_TYPE_LABELS,
-  MOVEMENT_CATEGORY_LABELS,
   WORKOUT_TYPE_COLORS,
-  MOVEMENT_CATEGORY_COLORS,
   ALL_WORKOUT_TYPES,
-  ALL_MOVEMENT_CATEGORIES,
 } from './workout';

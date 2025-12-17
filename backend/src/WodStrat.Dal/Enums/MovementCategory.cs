@@ -34,5 +34,12 @@ public enum MovementCategory
     /// </summary>
     [Description("Strongman movements")]
     [PgName("strongman")]
-    Strongman
+    Strongman,
+
+    /// <summary>
+    /// Accessory and supplementary movements.
+    /// </summary>
+    [Description("Accessory movements")]
+    [PgName("accessory")]
+    Accessory
 }

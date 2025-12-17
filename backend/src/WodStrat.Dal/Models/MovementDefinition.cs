@@ -23,7 +23,7 @@ public class MovementDefinition
     public string DisplayName { get; set; } = string.Empty;
 
     /// <summary>
-    /// Movement category (weightlifting/gymnastics/cardio/strongman).
+    /// Movement category (weightlifting/gymnastics/cardio/strongman/accessory).
     /// </summary>
     public MovementCategory Category { get; set; }
 
@@ -33,14 +33,49 @@ public class MovementDefinition
     public string? Description { get; set; }
 
     /// <summary>
+    /// Array of required equipment (e.g., ["pull_up_bar", "rings"]).
+    /// </summary>
+    public string[]? Equipment { get; set; }
+
+    /// <summary>
+    /// Default unit for weight-based movements (kg/lb/pood).
+    /// </summary>
+    public LoadUnit? DefaultLoadUnit { get; set; }
+
+    /// <summary>
+    /// Whether this is a bodyweight movement (no external load required).
+    /// </summary>
+    public bool IsBodyweight { get; set; }
+
+    /// <summary>
+    /// Whether this movement has standard RX weights in CrossFit.
+    /// </summary>
+    public bool HasRxWeights { get; set; }
+
+    /// <summary>
+    /// JSON object containing scaling options.
+    /// </summary>
+    public string? ScalingOptions { get; set; }
+
+    /// <summary>
     /// Whether this movement is currently available for use.
     /// </summary>
     public bool IsActive { get; set; } = true;
 
     /// <summary>
+    /// Soft delete flag (true = deleted).
+    /// </summary>
+    public bool IsDeleted { get; set; }
+
+    /// <summary>
     /// Record creation timestamp.
     /// </summary>
     public DateTime CreatedAt { get; set; }
+
+    /// <summary>
+    /// Last update timestamp.
+    /// </summary>
+    public DateTime UpdatedAt { get; set; }
 
     // Navigation properties
     /// <summary>

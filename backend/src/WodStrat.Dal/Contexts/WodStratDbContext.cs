@@ -358,14 +358,46 @@ public class WodStratDbContext : DbContext, IWodStratDatabase
                 .HasColumnName("description")
                 .HasMaxLength(500);
 
+            // Equipment array
+            entity.Property(e => e.Equipment)
+                .HasColumnName("equipment");
+
+            // Default load unit
+            entity.Property(e => e.DefaultLoadUnit)
+                .HasColumnName("default_load_unit");
+
+            // Bodyweight indicator
+            entity.Property(e => e.IsBodyweight)
+                .HasColumnName("is_bodyweight")
+                .HasDefaultValue(false);
+
+            // RX weights indicator
+            entity.Property(e => e.HasRxWeights)
+                .HasColumnName("has_rx_weights")
+                .HasDefaultValue(false);
+
+            // Scaling options (JSONB stored as string)
+            entity.Property(e => e.ScalingOptions)
+                .HasColumnName("scaling_options")
+                .HasColumnType("jsonb");
+
             // Status
             entity.Property(e => e.IsActive)
                 .HasColumnName("is_active")
                 .HasDefaultValue(true);
 
+            // Soft delete
+            entity.Property(e => e.IsDeleted)
+                .HasColumnName("is_deleted")
+                .HasDefaultValue(false);
+
             // Audit fields
             entity.Property(e => e.CreatedAt)
                 .HasColumnName("created_at")
+                .HasDefaultValueSql("NOW()");
+
+            entity.Property(e => e.UpdatedAt)
+                .HasColumnName("updated_at")
                 .HasDefaultValueSql("NOW()");
 
             // Indexes
@@ -379,6 +411,18 @@ public class WodStratDbContext : DbContext, IWodStratDatabase
             entity.HasIndex(e => e.IsActive)
                 .HasDatabaseName("idx_movement_definitions_is_active")
                 .HasFilter("is_active = TRUE");
+
+            entity.HasIndex(e => e.IsDeleted)
+                .HasDatabaseName("idx_movement_definitions_is_deleted")
+                .HasFilter("is_deleted = FALSE");
+
+            entity.HasIndex(e => e.IsBodyweight)
+                .HasDatabaseName("idx_movement_definitions_is_bodyweight")
+                .HasFilter("is_bodyweight = TRUE");
+
+            entity.HasIndex(e => e.HasRxWeights)
+                .HasDatabaseName("idx_movement_definitions_has_rx_weights")
+                .HasFilter("has_rx_weights = TRUE");
         });
 
         // Configure MovementAlias entity
@@ -403,6 +447,12 @@ public class WodStratDbContext : DbContext, IWodStratDatabase
                 .HasMaxLength(100)
                 .IsRequired();
 
+            // Normalized alias for matching
+            entity.Property(e => e.AliasNormalized)
+                .HasColumnName("alias_normalized")
+                .HasMaxLength(100)
+                .IsRequired();
+
             // Audit fields
             entity.Property(e => e.CreatedAt)
                 .HasColumnName("created_at")
@@ -418,6 +468,13 @@ public class WodStratDbContext : DbContext, IWodStratDatabase
             entity.HasIndex(e => e.Alias)
                 .HasDatabaseName("uq_movement_aliases_alias")
                 .IsUnique();
+
+            entity.HasIndex(e => e.AliasNormalized)
+                .HasDatabaseName("uq_movement_aliases_alias_normalized")
+                .IsUnique();
+
+            entity.HasIndex(e => e.AliasNormalized)
+                .HasDatabaseName("idx_movement_aliases_alias_normalized");
 
             entity.HasIndex(e => e.MovementDefinitionId)
                 .HasDatabaseName("idx_movement_aliases_definition_id");

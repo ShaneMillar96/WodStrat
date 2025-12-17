@@ -25,4 +25,37 @@ public static class MovementMappingExtensions
             Aliases = entity.Aliases?.Select(a => a.Alias).ToList() ?? new List<string>()
         };
     }
+
+    /// <summary>
+    /// Maps a MovementAlias entity to a MovementAliasDto.
+    /// </summary>
+    /// <param name="entity">The movement alias entity.</param>
+    /// <returns>The movement alias DTO.</returns>
+    public static MovementAliasDto ToDto(this MovementAlias entity)
+    {
+        return new MovementAliasDto
+        {
+            Id = entity.Id,
+            MovementDefinitionId = entity.MovementDefinitionId,
+            Alias = entity.Alias,
+            CreatedAt = entity.CreatedAt
+        };
+    }
+
+    /// <summary>
+    /// Creates a NormalizeMovementResultDto from a normalization result.
+    /// </summary>
+    /// <param name="input">The original input string.</param>
+    /// <param name="movement">The matched movement definition, or null if no match.</param>
+    /// <returns>The normalization result DTO.</returns>
+    public static NormalizeMovementResultDto ToNormalizeResult(string input, MovementDefinitionDto? movement)
+    {
+        return new NormalizeMovementResultDto
+        {
+            Input = input,
+            CanonicalName = movement?.CanonicalName,
+            IsMatch = movement != null,
+            Movement = movement
+        };
+    }
 }
