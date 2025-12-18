@@ -78,6 +78,7 @@ builder.Services.AddScoped<IBenchmarkService, BenchmarkService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<IMovementDefinitionService, MovementDefinitionService>();
+builder.Services.AddScoped<IPatternMatchingService, PatternMatchingService>();
 builder.Services.AddScoped<IWorkoutParsingService, WorkoutParsingService>();
 builder.Services.AddScoped<IWorkoutService, WorkoutService>();
 
