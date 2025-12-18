@@ -41,5 +41,12 @@ public enum WorkoutType
     /// </summary>
     [Description("Fixed rounds for quality")]
     [PgName("rounds")]
-    Rounds
+    Rounds,
+
+    /// <summary>
+    /// Tabata protocol - 20 seconds work, 10 seconds rest, 8 rounds.
+    /// </summary>
+    [Description("Tabata protocol")]
+    [PgName("tabata")]
+    Tabata
 }

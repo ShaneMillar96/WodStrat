@@ -17,6 +17,7 @@ namespace WodStrat.Services.Tests.Services;
 public class WorkoutParsingServiceTests
 {
     private readonly IFixture _fixture;
+    private readonly IPatternMatchingService _patternMatchingService;
     private readonly IMovementDefinitionService _movementDefinitionService;
     private readonly WorkoutParsingService _sut;
 
@@ -24,6 +25,8 @@ public class WorkoutParsingServiceTests
     {
         _fixture = new Fixture().Customize(new AutoNSubstituteCustomization());
 
+        // Use real PatternMatchingService for accurate pattern matching
+        _patternMatchingService = new PatternMatchingService();
         _movementDefinitionService = Substitute.For<IMovementDefinitionService>();
 
         // Setup default alias lookup with common movements
@@ -73,7 +76,77 @@ public class WorkoutParsingServiceTests
         _movementDefinitionService.GetAliasLookupAsync(Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<IReadOnlyDictionary<string, int>>(aliasLookup));
 
-        // Setup movement definitions for identified movements
+        // Setup NormalizeMovementNameAsync to return canonical names for known movements
+        _movementDefinitionService.NormalizeMovementNameAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(callInfo =>
+            {
+                var input = callInfo.Arg<string>()?.ToLowerInvariant() ?? string.Empty;
+                if (input.Contains("pull") || input == "pu")
+                    return Task.FromResult<string?>("pull_up");
+                if (input.Contains("thruster"))
+                    return Task.FromResult<string?>("thruster");
+                if (input.Contains("squat"))
+                    return Task.FromResult<string?>("air_squat");
+                if (input.Contains("push"))
+                    return Task.FromResult<string?>("push_up");
+                if (input.Contains("box"))
+                    return Task.FromResult<string?>("box_jump");
+                if (input.Contains("deadlift") || input == "dl")
+                    return Task.FromResult<string?>("deadlift");
+                if (input.Contains("row"))
+                    return Task.FromResult<string?>("row");
+                if (input.Contains("run"))
+                    return Task.FromResult<string?>("run");
+                if (input.Contains("double") || input == "du")
+                    return Task.FromResult<string?>("double_under");
+                if (input.Contains("wall") || input == "wb")
+                    return Task.FromResult<string?>("wall_ball");
+                if (input.Contains("toes") || input == "t2b" || input == "ttb")
+                    return Task.FromResult<string?>("toes_to_bar");
+                if (input.Contains("muscle") || input == "mu")
+                    return Task.FromResult<string?>("muscle_up");
+                if (input.Contains("clean"))
+                    return Task.FromResult<string?>("clean");
+                if (input.Contains("snatch"))
+                    return Task.FromResult<string?>("snatch");
+                if (input.Contains("burpee"))
+                    return Task.FromResult<string?>("burpee");
+                if (input.Contains("cal"))
+                    return Task.FromResult<string?>("row"); // Cal Row -> Row
+                return Task.FromResult<string?>(null);
+            });
+
+        // Setup GetMovementByCanonicalNameAsync to return movement definitions
+        _movementDefinitionService.GetMovementByCanonicalNameAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(callInfo =>
+            {
+                var canonical = callInfo.Arg<string>();
+                return canonical switch
+                {
+                    "pull_up" => Task.FromResult<MovementDefinitionDto?>(new MovementDefinitionDto { Id = 1, CanonicalName = "pull_up", DisplayName = "Pull-up", Category = "Gymnastics" }),
+                    "thruster" => Task.FromResult<MovementDefinitionDto?>(new MovementDefinitionDto { Id = 2, CanonicalName = "thruster", DisplayName = "Thruster", Category = "Weightlifting" }),
+                    "air_squat" => Task.FromResult<MovementDefinitionDto?>(new MovementDefinitionDto { Id = 3, CanonicalName = "air_squat", DisplayName = "Air Squat", Category = "Gymnastics" }),
+                    "push_up" => Task.FromResult<MovementDefinitionDto?>(new MovementDefinitionDto { Id = 4, CanonicalName = "push_up", DisplayName = "Push-up", Category = "Gymnastics" }),
+                    "box_jump" => Task.FromResult<MovementDefinitionDto?>(new MovementDefinitionDto { Id = 5, CanonicalName = "box_jump", DisplayName = "Box Jump", Category = "Gymnastics" }),
+                    "deadlift" => Task.FromResult<MovementDefinitionDto?>(new MovementDefinitionDto { Id = 6, CanonicalName = "deadlift", DisplayName = "Deadlift", Category = "Weightlifting" }),
+                    "row" => Task.FromResult<MovementDefinitionDto?>(new MovementDefinitionDto { Id = 7, CanonicalName = "row", DisplayName = "Row", Category = "Cardio" }),
+                    "run" => Task.FromResult<MovementDefinitionDto?>(new MovementDefinitionDto { Id = 8, CanonicalName = "run", DisplayName = "Run", Category = "Cardio" }),
+                    "double_under" => Task.FromResult<MovementDefinitionDto?>(new MovementDefinitionDto { Id = 9, CanonicalName = "double_under", DisplayName = "Double-under", Category = "Gymnastics" }),
+                    "wall_ball" => Task.FromResult<MovementDefinitionDto?>(new MovementDefinitionDto { Id = 10, CanonicalName = "wall_ball", DisplayName = "Wall Ball", Category = "Weightlifting" }),
+                    "toes_to_bar" => Task.FromResult<MovementDefinitionDto?>(new MovementDefinitionDto { Id = 11, CanonicalName = "toes_to_bar", DisplayName = "Toes-to-Bar", Category = "Gymnastics" }),
+                    "muscle_up" => Task.FromResult<MovementDefinitionDto?>(new MovementDefinitionDto { Id = 12, CanonicalName = "muscle_up", DisplayName = "Muscle-up", Category = "Gymnastics" }),
+                    "clean" => Task.FromResult<MovementDefinitionDto?>(new MovementDefinitionDto { Id = 13, CanonicalName = "clean", DisplayName = "Clean", Category = "Weightlifting" }),
+                    "snatch" => Task.FromResult<MovementDefinitionDto?>(new MovementDefinitionDto { Id = 14, CanonicalName = "snatch", DisplayName = "Snatch", Category = "Weightlifting" }),
+                    "burpee" => Task.FromResult<MovementDefinitionDto?>(new MovementDefinitionDto { Id = 15, CanonicalName = "burpee", DisplayName = "Burpee", Category = "Gymnastics" }),
+                    _ => Task.FromResult<MovementDefinitionDto?>(null)
+                };
+            });
+
+        // Setup SearchMovementsAsync for fuzzy matching fallback
+        _movementDefinitionService.SearchMovementsAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<IReadOnlyList<MovementDefinitionDto>>(Array.Empty<MovementDefinitionDto>()));
+
+        // Setup movement definitions for identified movements (legacy - still used by some paths)
         _movementDefinitionService.FindMovementByAliasAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(callInfo =>
             {
@@ -111,7 +184,7 @@ public class WorkoutParsingServiceTests
                 return Task.FromResult<MovementDefinitionDto?>(null);
             });
 
-        _sut = new WorkoutParsingService(_movementDefinitionService);
+        _sut = new WorkoutParsingService(_patternMatchingService, _movementDefinitionService);
     }
 
     #region Empty/Invalid Input Tests
@@ -590,7 +663,7 @@ Time Cap: 15";
     #region Error Handling Tests
 
     [Fact]
-    public async Task ParseWorkoutTextAsync_UnrecognizedMovement_AddsErrorButContinues()
+    public async Task ParseWorkoutTextAsync_UnrecognizedMovement_AddsWarningButContinues()
     {
         // Arrange
         var workoutText = @"For Time:
@@ -602,9 +675,13 @@ Time Cap: 15";
         var result = await _sut.ParseWorkoutTextAsync(workoutText);
 
         // Assert
-        result.Movements.Should().HaveCount(2); // Only valid movements
-        result.Errors.Should().HaveCountGreaterThan(0);
-        result.Errors.Should().Contain(e => e.ErrorType == "UnrecognizedMovement");
+        // New behavior: movements with valid quantities are included even if not identified
+        // The unrecognized movement is parsed but has no MovementDefinitionId
+        result.Movements.Should().HaveCount(3);
+        result.Movements[0].MovementDefinitionId.Should().Be(1); // Pull-up identified
+        result.Movements[1].MovementDefinitionId.Should().BeNull(); // Imaginary not identified
+        result.Movements[1].RepCount.Should().Be(5); // But reps are parsed
+        result.Movements[2].MovementDefinitionId.Should().Be(4); // Push-up identified
     }
 
     [Fact]

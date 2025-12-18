@@ -1,3 +1,5 @@
+using WodStrat.Dal.Enums;
+
 namespace WodStrat.Services.Parsing;
 
 /// <summary>
@@ -21,30 +23,4 @@ public sealed record RepScheme(
     /// Number of rounds/sets in the scheme.
     /// </summary>
     public int RoundCount => Reps.Count;
-}
-
-/// <summary>
-/// Classification of rep scheme patterns.
-/// </summary>
-public enum RepSchemeType
-{
-    /// <summary>
-    /// Reps decrease each round (e.g., 21-15-9).
-    /// </summary>
-    Descending,
-
-    /// <summary>
-    /// Reps increase each round (e.g., 1-2-3-4-5).
-    /// </summary>
-    Ascending,
-
-    /// <summary>
-    /// Same reps each round (e.g., 5 rounds of 10).
-    /// </summary>
-    Fixed,
-
-    /// <summary>
-    /// Variable reps with no clear pattern.
-    /// </summary>
-    Custom
 }

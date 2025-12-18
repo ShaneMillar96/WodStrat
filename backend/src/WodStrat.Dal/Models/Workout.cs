@@ -18,7 +18,7 @@ public class Workout : EntityBase
     public string? Name { get; set; }
 
     /// <summary>
-    /// Workout format (amrap/for_time/emom/intervals/rounds).
+    /// Workout format (amrap/for_time/emom/intervals/rounds/tabata).
     /// </summary>
     public WorkoutType WorkoutType { get; set; }
 
@@ -46,6 +46,21 @@ public class Workout : EntityBase
     /// Interval duration in seconds (for EMOM).
     /// </summary>
     public int? IntervalDurationSeconds { get; set; }
+
+    /// <summary>
+    /// Parser confidence score (0.00-1.00) indicating reliability of parsing.
+    /// </summary>
+    public decimal? ParseConfidence { get; set; }
+
+    /// <summary>
+    /// Type of rep scheme pattern (fixed/descending/ascending/custom).
+    /// </summary>
+    public RepSchemeType? RepSchemeType { get; set; }
+
+    /// <summary>
+    /// Array of rep values for the rep scheme (e.g., [21, 15, 9] for Fran).
+    /// </summary>
+    public int[]? RepSchemeReps { get; set; }
 
     // Navigation properties
     /// <summary>

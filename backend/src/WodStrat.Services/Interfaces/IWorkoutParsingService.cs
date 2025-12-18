@@ -25,4 +25,13 @@ public interface IWorkoutParsingService
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>List of parsing errors, or empty list if valid.</returns>
     Task<IReadOnlyList<ParsingErrorDto>> ValidateWorkoutTextAsync(string workoutText, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Parses raw workout text with full confidence scoring and detailed results.
+    /// Use this for comprehensive parsing with validation feedback.
+    /// </summary>
+    /// <param name="workoutText">The raw workout text to parse.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Full parsing result with confidence scores and warnings.</returns>
+    Task<ParsedWorkoutResult> ParseWorkoutAsync(string workoutText, CancellationToken cancellationToken = default);
 }

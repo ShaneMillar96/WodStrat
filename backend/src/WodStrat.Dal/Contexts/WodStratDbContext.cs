@@ -38,6 +38,7 @@ public class WodStratDbContext : DbContext, IWodStratDatabase
         modelBuilder.HasPostgresEnum<MovementCategory>("movement_category");
         modelBuilder.HasPostgresEnum<LoadUnit>("load_unit");
         modelBuilder.HasPostgresEnum<DistanceUnit>("distance_unit");
+        modelBuilder.HasPostgresEnum<RepSchemeType>("rep_scheme_type");
 
         // Configure User entity
         modelBuilder.Entity<User>(entity =>
@@ -523,6 +524,19 @@ public class WodStratDbContext : DbContext, IWodStratDatabase
             entity.Property(e => e.IntervalDurationSeconds)
                 .HasColumnName("interval_duration_seconds");
 
+            // Parse confidence
+            entity.Property(e => e.ParseConfidence)
+                .HasColumnName("parse_confidence")
+                .HasPrecision(3, 2);
+
+            // Rep scheme type
+            entity.Property(e => e.RepSchemeType)
+                .HasColumnName("rep_scheme_type");
+
+            // Rep scheme reps array
+            entity.Property(e => e.RepSchemeReps)
+                .HasColumnName("rep_scheme_reps");
+
             // Soft delete
             entity.Property(e => e.IsDeleted)
                 .HasColumnName("is_deleted")
@@ -561,6 +575,17 @@ public class WodStratDbContext : DbContext, IWodStratDatabase
             entity.HasIndex(e => e.CreatedAt)
                 .HasDatabaseName("idx_workouts_created_at")
                 .IsDescending();
+
+            // Parse confidence index
+            entity.HasIndex(e => e.ParseConfidence)
+                .HasDatabaseName("idx_workouts_parse_confidence")
+                .HasFilter("parse_confidence IS NOT NULL")
+                .IsDescending();
+
+            // Rep scheme type index
+            entity.HasIndex(e => e.RepSchemeType)
+                .HasDatabaseName("idx_workouts_rep_scheme_type")
+                .HasFilter("rep_scheme_type IS NOT NULL");
         });
 
         // Configure WorkoutMovement entity
@@ -616,6 +641,13 @@ public class WodStratDbContext : DbContext, IWodStratDatabase
                 .HasColumnName("notes")
                 .HasMaxLength(500);
 
+            // EMOM minute range
+            entity.Property(e => e.MinuteStart)
+                .HasColumnName("minute_start");
+
+            entity.Property(e => e.MinuteEnd)
+                .HasColumnName("minute_end");
+
             // Audit fields
             entity.Property(e => e.CreatedAt)
                 .HasColumnName("created_at")
@@ -641,6 +673,11 @@ public class WodStratDbContext : DbContext, IWodStratDatabase
 
             entity.HasIndex(e => new { e.WorkoutId, e.SequenceOrder })
                 .HasDatabaseName("idx_workout_movements_workout_order");
+
+            // EMOM minute range index
+            entity.HasIndex(e => new { e.WorkoutId, e.MinuteStart, e.MinuteEnd })
+                .HasDatabaseName("idx_workout_movements_minute_range")
+                .HasFilter("minute_start IS NOT NULL");
         });
     }
 }

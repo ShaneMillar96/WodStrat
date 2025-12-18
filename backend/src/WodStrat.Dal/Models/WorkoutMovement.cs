@@ -68,6 +68,16 @@ public class WorkoutMovement
     public string? Notes { get; set; }
 
     /// <summary>
+    /// Starting minute for EMOM workouts (1-indexed).
+    /// </summary>
+    public int? MinuteStart { get; set; }
+
+    /// <summary>
+    /// Ending minute for EMOM workouts (for movements spanning multiple minutes).
+    /// </summary>
+    public int? MinuteEnd { get; set; }
+
+    /// <summary>
     /// Record creation timestamp.
     /// </summary>
     public DateTime CreatedAt { get; set; }

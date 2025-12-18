@@ -28,6 +28,7 @@ dataSourceBuilder.MapEnum<WorkoutType>("workout_type");
 dataSourceBuilder.MapEnum<MovementCategory>("movement_category");
 dataSourceBuilder.MapEnum<LoadUnit>("load_unit");
 dataSourceBuilder.MapEnum<DistanceUnit>("distance_unit");
+dataSourceBuilder.MapEnum<RepSchemeType>("rep_scheme_type");
 var dataSource = dataSourceBuilder.Build();
 
 builder.Services.AddDbContext<WodStratDbContext>(options =>

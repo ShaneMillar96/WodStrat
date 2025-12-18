@@ -190,6 +190,28 @@ public static class WorkoutMappingExtensions
         };
     }
 
+    /// <summary>
+    /// Creates a CreateWorkoutDto from a ParsedWorkoutResult.
+    /// Returns null if the result is not usable.
+    /// </summary>
+    /// <param name="result">The parsed workout result.</param>
+    /// <param name="name">Optional workout name to use.</param>
+    /// <returns>A create workout DTO, or null if result is not usable.</returns>
+    public static CreateWorkoutDto? ToCreateDto(this ParsedWorkoutResult result, string? name = null)
+    {
+        if (!result.IsUsable || result.ParsedWorkout == null)
+        {
+            return null;
+        }
+
+        var dto = result.ParsedWorkout.ToCreateDto();
+        if (!string.IsNullOrWhiteSpace(name))
+        {
+            dto.Name = name;
+        }
+        return dto;
+    }
+
     #region Formatting Helpers
 
     private static string? FormatSeconds(int? totalSeconds)
