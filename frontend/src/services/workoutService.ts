@@ -6,6 +6,7 @@ import type {
   CreateWorkoutRequest,
   UpdateWorkoutRequest,
 } from '../types/workout';
+import type { ParseWorkoutResponse } from '../types/parsingError';
 
 /**
  * Workout API service
@@ -14,12 +15,23 @@ import type {
  */
 export const workoutService = {
   /**
-   * Parse workout text into structured data (preview without saving)
+   * Parse workout text into structured data (legacy - returns ParsedWorkout directly)
+   * @deprecated Use parseWithErrors for enhanced error handling
    * @param text - The raw workout text to parse
    * @returns Parsed workout structure with detected type, movements, and any errors
    */
   parse: async (text: string): Promise<ParsedWorkout> => {
     return api.post<ParsedWorkout, ParseWorkoutRequest>('/workouts/parse', { text });
+  },
+
+  /**
+   * Parse workout text with enhanced error response
+   * Returns detailed errors, warnings, suggestions, and confidence score
+   * @param text - The raw workout text to parse
+   * @returns Enhanced parsing response with errors, warnings, and parsed workout
+   */
+  parseWithErrors: async (text: string): Promise<ParseWorkoutResponse> => {
+    return api.post<ParseWorkoutResponse, ParseWorkoutRequest>('/workouts/parse', { text });
   },
 
   /**

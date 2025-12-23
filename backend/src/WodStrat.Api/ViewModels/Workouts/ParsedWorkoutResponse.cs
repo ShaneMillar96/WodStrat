@@ -59,13 +59,8 @@ public class ParsedWorkoutResponse
     public IReadOnlyList<ParsedMovementResponse> Movements { get; set; } = Array.Empty<ParsedMovementResponse>();
 
     /// <summary>
-    /// List of parsing errors encountered.
+    /// Parse confidence score (0.0 to 1.0). Included for convenience.
     /// </summary>
-    public IReadOnlyList<ParsingErrorResponse> Errors { get; set; } = Array.Empty<ParsingErrorResponse>();
-
-    /// <summary>
-    /// Indicates if parsing completed successfully without errors.
-    /// </summary>
-    /// <example>true</example>
-    public bool IsValid { get; set; }
+    /// <example>0.85</example>
+    public decimal? ParseConfidence { get; set; }
 }

@@ -1,3 +1,4 @@
+using System.Text;
 using WodStrat.Api.ViewModels.Workouts;
 using WodStrat.Dal.Enums;
 using WodStrat.Services.Dtos;
@@ -26,10 +27,18 @@ public static class WorkoutMappingExtensions
             RoundCount = dto.RoundCount,
             IntervalDurationSeconds = dto.IntervalDurationSeconds,
             IntervalDurationFormatted = FormatSeconds(dto.IntervalDurationSeconds),
-            Movements = dto.Movements.Select(m => m.ToResponse()).ToList(),
-            Errors = dto.Errors.Select(e => e.ToResponse()).ToList(),
-            IsValid = dto.IsValid
+            Movements = dto.Movements.Select(m => m.ToResponse()).ToList()
         };
+    }
+
+    /// <summary>
+    /// Maps ParsedWorkoutDto to ParsedWorkoutResponse with confidence score.
+    /// </summary>
+    public static ParsedWorkoutResponse ToResponse(this ParsedWorkoutDto dto, decimal? confidenceScore)
+    {
+        var response = dto.ToResponse();
+        response.ParseConfidence = confidenceScore;
+        return response;
     }
 
     /// <summary>
@@ -58,20 +67,6 @@ public static class WorkoutMappingExtensions
             DurationSeconds = dto.DurationSeconds,
             DurationFormatted = FormatSeconds(dto.DurationSeconds),
             Notes = dto.Notes
-        };
-    }
-
-    /// <summary>
-    /// Maps ParsingErrorDto to ParsingErrorResponse.
-    /// </summary>
-    public static ParsingErrorResponse ToResponse(this ParsingErrorDto dto)
-    {
-        return new ParsingErrorResponse
-        {
-            ErrorType = dto.ErrorType,
-            Message = dto.Message,
-            LineNumber = dto.LineNumber,
-            OriginalText = dto.OriginalText
         };
     }
 
@@ -121,6 +116,82 @@ public static class WorkoutMappingExtensions
             DurationSeconds = dto.DurationSeconds,
             DurationFormatted = dto.DurationFormatted,
             Notes = dto.Notes
+        };
+    }
+
+    #endregion
+
+    #region ParsedWorkoutResult Mappings
+
+    /// <summary>
+    /// Maps ParsedWorkoutResult to ParsedWorkoutResultResponse.
+    /// </summary>
+    public static ParsedWorkoutResultResponse ToResultResponse(this ParsedWorkoutResult result)
+    {
+        var confidenceScore = result.ConfidenceScore / 100m;
+
+        return new ParsedWorkoutResultResponse
+        {
+            Success = result.Success,
+            Errors = result.Errors.Select(e => e.ToErrorResponse()).ToList(),
+            Warnings = result.Warnings.Select(w => w.ToWarningResponse()).ToList(),
+            ParsedWorkout = result.Success ? result.ParsedWorkout?.ToResponse(confidenceScore) : null,
+            PartialResult = !result.Success && result.ParsedWorkout != null
+                ? result.ParsedWorkout.ToResponse(confidenceScore)
+                : null,
+            ParseConfidence = confidenceScore,
+            ConfidenceLevel = result.ConfidenceLevel,
+            ConfidenceDetails = result.ConfidenceDetails?.ToResponse(),
+            IsUsable = result.IsUsable
+        };
+    }
+
+    /// <summary>
+    /// Maps ParsingErrorDto to ParsingErrorResponse with enhanced fields.
+    /// </summary>
+    public static ParsingErrorResponse ToErrorResponse(this ParsingErrorDto dto)
+    {
+        return new ParsingErrorResponse
+        {
+            Code = ConvertToScreamingSnakeCase(dto.ErrorType),
+            Message = dto.Message,
+            Suggestion = dto.Suggestion ?? GenerateErrorSuggestion(dto.ErrorType),
+            Line = dto.LineNumber > 0 ? dto.LineNumber : null,
+            Severity = "error",
+            OriginalText = dto.OriginalText
+        };
+    }
+
+    /// <summary>
+    /// Maps ParsingWarningDto to ParsingWarningResponse.
+    /// </summary>
+    public static ParsingWarningResponse ToWarningResponse(this ParsingWarningDto dto)
+    {
+        return new ParsingWarningResponse
+        {
+            Code = ConvertToScreamingSnakeCase(dto.WarningType),
+            Message = dto.Message,
+            Suggestion = dto.Suggestion,
+            Line = dto.LineNumber > 0 ? dto.LineNumber : null,
+            Severity = "warning",
+            OriginalText = dto.OriginalText
+        };
+    }
+
+    /// <summary>
+    /// Maps ConfidenceBreakdown to ConfidenceBreakdownResponse.
+    /// </summary>
+    public static ConfidenceBreakdownResponse ToResponse(this ConfidenceBreakdown breakdown)
+    {
+        return new ConfidenceBreakdownResponse
+        {
+            WorkoutTypeConfidence = breakdown.WorkoutTypeConfidence / 100m,
+            TimeDomainConfidence = breakdown.TimeDomainConfidence / 100m,
+            MovementIdentificationConfidence = breakdown.MovementIdentificationConfidence / 100m,
+            MovementsIdentified = breakdown.MovementsIdentified,
+            TotalMovementLines = breakdown.TotalMovementLines,
+            MovementsWithCompleteData = breakdown.MovementsWithCompleteData,
+            MovementIdentificationRate = breakdown.MovementIdentificationRate
         };
     }
 
@@ -224,6 +295,52 @@ public static class WorkoutMappingExtensions
     {
         if (string.IsNullOrEmpty(unit)) return null;
         return Enum.TryParse<DistanceUnit>(unit, ignoreCase: true, out var result) ? result : null;
+    }
+
+    #endregion
+
+    #region Helper Methods for Error Handling
+
+    /// <summary>
+    /// Converts PascalCase/camelCase to SCREAMING_SNAKE_CASE.
+    /// </summary>
+    private static string ConvertToScreamingSnakeCase(string input)
+    {
+        if (string.IsNullOrEmpty(input)) return string.Empty;
+
+        var result = new StringBuilder();
+        for (int i = 0; i < input.Length; i++)
+        {
+            var c = input[i];
+            if (char.IsUpper(c) && i > 0)
+            {
+                result.Append('_');
+            }
+            result.Append(char.ToUpperInvariant(c));
+        }
+        return result.ToString();
+    }
+
+    /// <summary>
+    /// Generates a helpful suggestion based on error type.
+    /// </summary>
+    private static string? GenerateErrorSuggestion(string errorType)
+    {
+        return errorType switch
+        {
+            "EmptyInput" => "Enter workout text with movements on separate lines (e.g., '10 Pull-ups').",
+            "NoMovements" or "NoMovementsDetected" =>
+                "Make sure each movement is on its own line with a rep count (e.g., '10 Pull-ups').",
+            "UnrecognizedMovement" or "UnknownMovement" =>
+                "Check the spelling of the movement name. Common movements include Pull-ups, Push-ups, Squats, etc.",
+            "AmbiguousWorkoutType" =>
+                "Try specifying the workout type explicitly (e.g., 'AMRAP 20 min', 'For Time', '5 Rounds').",
+            "InvalidRepCount" or "MissingRepCount" =>
+                "Each movement needs a rep count at the start (e.g., '10 Pull-ups') or use 'Max' for max reps.",
+            "InvalidTimeDomain" =>
+                "Specify time in minutes (e.g., '20 min AMRAP') or MM:SS format (e.g., '20:00 time cap').",
+            _ => null
+        };
     }
 
     #endregion

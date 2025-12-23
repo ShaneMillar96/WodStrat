@@ -28,24 +28,43 @@ public class WorkoutsController : ControllerBase
     }
 
     /// <summary>
-    /// Parse workout text into structured data (preview without saving).
+    /// Parse workout text into structured data with comprehensive error handling.
     /// </summary>
+    /// <remarks>
+    /// Parses raw workout text and returns a structured result with:
+    /// - **Parsed workout data** including type, time domain, and movements
+    /// - **Confidence scoring** indicating parse reliability (0-100%)
+    /// - **Errors** for blocking issues that prevent parsing
+    /// - **Warnings** for non-blocking issues with suggestions
+    ///
+    /// The response always returns HTTP 200 OK. Check the `success` field to determine
+    /// if parsing succeeded. When `success` is false, `errors` contains blocking issues.
+    /// When `success` is true but `warnings` exist, the parse completed with minor issues.
+    ///
+    /// **Example input:**
+    /// ```
+    /// 20 min AMRAP
+    /// 10 Pull-ups
+    /// 15 Push-ups
+    /// 20 Air Squats
+    /// ```
+    /// </remarks>
     /// <param name="request">The workout text to parse.</param>
     /// <param name="ct">Cancellation token.</param>
-    /// <returns>Parsed workout structure with detected type, movements, and any parsing errors.</returns>
-    /// <response code="200">Successfully parsed workout text.</response>
-    /// <response code="400">Invalid request.</response>
+    /// <returns>Parsed workout result with errors, warnings, and confidence scoring.</returns>
+    /// <response code="200">Parsing attempted - check success field for result.</response>
+    /// <response code="400">Request validation failed.</response>
     /// <response code="401">Not authenticated.</response>
     [HttpPost("parse")]
-    [ProducesResponseType(typeof(ParsedWorkoutResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ParsedWorkoutResultResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<ActionResult<ParsedWorkoutResponse>> ParseWorkoutText(
+    public async Task<ActionResult<ParsedWorkoutResultResponse>> ParseWorkoutText(
         [FromBody] ParseWorkoutRequest request,
         CancellationToken ct)
     {
-        var result = await _workoutParsingService.ParseWorkoutTextAsync(request.Text, ct);
-        return Ok(result.ToResponse());
+        var result = await _workoutParsingService.ParseWorkoutAsync(request.Text, ct);
+        return Ok(result.ToResultResponse());
     }
 
     /// <summary>

@@ -89,3 +89,19 @@ export {
   WORKOUT_TYPE_COLORS,
   ALL_WORKOUT_TYPES,
 } from './workout';
+
+// Parsing error types
+export type {
+  ParsingIssueSeverity,
+  ParsingIssueCode,
+  ParsingIssue,
+  ParseWorkoutResponse,
+  LineError,
+  SuggestionAction,
+} from './parsingError';
+
+export {
+  SEVERITY_LABELS,
+  SEVERITY_BADGE_VARIANTS,
+  SEVERITY_ALERT_VARIANTS,
+} from './parsingError';

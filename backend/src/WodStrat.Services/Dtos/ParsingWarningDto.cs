@@ -11,6 +11,11 @@ public class ParsingWarningDto
     public string WarningType { get; set; } = string.Empty;
 
     /// <summary>
+    /// Numeric warning code for programmatic handling.
+    /// </summary>
+    public int? WarningCode { get; set; }
+
+    /// <summary>
     /// Human-readable warning message.
     /// </summary>
     public string Message { get; set; } = string.Empty;
@@ -29,4 +34,9 @@ public class ParsingWarningDto
     /// Suggested fix or alternative.
     /// </summary>
     public string? Suggestion { get; set; }
+
+    /// <summary>
+    /// Similar movement name suggestions.
+    /// </summary>
+    public IReadOnlyList<string>? SimilarNames { get; set; }
 }

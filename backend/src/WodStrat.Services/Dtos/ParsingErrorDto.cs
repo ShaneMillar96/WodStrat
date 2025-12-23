@@ -6,9 +6,14 @@ namespace WodStrat.Services.Dtos;
 public class ParsingErrorDto
 {
     /// <summary>
-    /// Type of error encountered.
+    /// Type of error encountered (legacy string format for API compatibility).
     /// </summary>
     public string ErrorType { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Numeric error code for programmatic handling.
+    /// </summary>
+    public int? ErrorCode { get; set; }
 
     /// <summary>
     /// Human-readable error message.
@@ -24,4 +29,14 @@ public class ParsingErrorDto
     /// The original text that caused the error.
     /// </summary>
     public string? OriginalText { get; set; }
+
+    /// <summary>
+    /// Suggested fix for the error.
+    /// </summary>
+    public string? Suggestion { get; set; }
+
+    /// <summary>
+    /// Similar movement name suggestions (for unknown movement errors).
+    /// </summary>
+    public IReadOnlyList<string>? SimilarNames { get; set; }
 }

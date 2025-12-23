@@ -37,23 +37,33 @@ public class WorkoutsControllerTests
     #region ParseWorkoutText Tests
 
     [Fact]
-    public async Task ParseWorkoutText_ValidRequest_ReturnsOkWithParsedWorkout()
+    public async Task ParseWorkoutText_ValidRequest_ReturnsOkWithParsedWorkoutResult()
     {
         // Arrange
         var request = new ParseWorkoutRequest { Text = "20 min AMRAP\n10 Pull-ups" };
         var parsedDto = _fixture.Create<ParsedWorkoutDto>();
+        var parsedResult = new ParsedWorkoutResult
+        {
+            Success = true,
+            ParsedWorkout = parsedDto,
+            ConfidenceScore = 100,
+            Errors = new List<ParsingErrorDto>(),
+            Warnings = new List<ParsingWarningDto>()
+        };
 
-        _workoutParsingService.ParseWorkoutTextAsync(request.Text, Arg.Any<CancellationToken>())
-            .Returns(parsedDto);
+        _workoutParsingService.ParseWorkoutAsync(request.Text, Arg.Any<CancellationToken>())
+            .Returns(parsedResult);
 
         // Act
         var result = await _sut.ParseWorkoutText(request, CancellationToken.None);
 
         // Assert
         var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
-        var response = okResult.Value.Should().BeOfType<ParsedWorkoutResponse>().Subject;
-        response.OriginalText.Should().Be(parsedDto.OriginalText);
-        response.WorkoutType.Should().Be(parsedDto.WorkoutType.ToString());
+        var response = okResult.Value.Should().BeOfType<ParsedWorkoutResultResponse>().Subject;
+        response.Success.Should().BeTrue();
+        response.ParsedWorkout.Should().NotBeNull();
+        response.ParsedWorkout!.OriginalText.Should().Be(parsedDto.OriginalText);
+        response.ParsedWorkout.WorkoutType.Should().Be(parsedDto.WorkoutType.ToString());
     }
 
     [Fact]
@@ -65,18 +75,27 @@ public class WorkoutsControllerTests
             .With(x => x.WorkoutType, WorkoutType.Amrap)
             .With(x => x.TimeCapSeconds, 1200)
             .Create();
+        var parsedResult = new ParsedWorkoutResult
+        {
+            Success = true,
+            ParsedWorkout = parsedDto,
+            ConfidenceScore = 100,
+            Errors = new List<ParsingErrorDto>(),
+            Warnings = new List<ParsingWarningDto>()
+        };
 
-        _workoutParsingService.ParseWorkoutTextAsync(request.Text, Arg.Any<CancellationToken>())
-            .Returns(parsedDto);
+        _workoutParsingService.ParseWorkoutAsync(request.Text, Arg.Any<CancellationToken>())
+            .Returns(parsedResult);
 
         // Act
         var result = await _sut.ParseWorkoutText(request, CancellationToken.None);
 
         // Assert
         var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
-        var response = okResult.Value.Should().BeOfType<ParsedWorkoutResponse>().Subject;
-        response.WorkoutType.Should().Be("Amrap");
-        response.TimeCapSeconds.Should().Be(1200);
+        var response = okResult.Value.Should().BeOfType<ParsedWorkoutResultResponse>().Subject;
+        response.ParsedWorkout.Should().NotBeNull();
+        response.ParsedWorkout!.WorkoutType.Should().Be("Amrap");
+        response.ParsedWorkout.TimeCapSeconds.Should().Be(1200);
     }
 
     [Fact]
@@ -86,23 +105,66 @@ public class WorkoutsControllerTests
         var request = new ParseWorkoutRequest { Text = "Invalid workout" };
         var parsedDto = _fixture.Build<ParsedWorkoutDto>()
             .With(x => x.Movements, new List<ParsedMovementDto>())
-            .With(x => x.Errors, new List<ParsingErrorDto>
+            .Create();
+        var parsedResult = new ParsedWorkoutResult
+        {
+            Success = false,
+            ParsedWorkout = parsedDto,
+            ConfidenceScore = 20,
+            Errors = new List<ParsingErrorDto>
             {
                 new() { LineNumber = 1, Message = "Unknown movement", ErrorType = "UnknownMovement" }
-            })
-            .Create();
+            },
+            Warnings = new List<ParsingWarningDto>()
+        };
 
-        _workoutParsingService.ParseWorkoutTextAsync(request.Text, Arg.Any<CancellationToken>())
-            .Returns(parsedDto);
+        _workoutParsingService.ParseWorkoutAsync(request.Text, Arg.Any<CancellationToken>())
+            .Returns(parsedResult);
 
         // Act
         var result = await _sut.ParseWorkoutText(request, CancellationToken.None);
 
         // Assert
         var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
-        var response = okResult.Value.Should().BeOfType<ParsedWorkoutResponse>().Subject;
-        response.IsValid.Should().BeFalse();
+        var response = okResult.Value.Should().BeOfType<ParsedWorkoutResultResponse>().Subject;
+        response.Success.Should().BeFalse();
         response.Errors.Should().HaveCount(1);
+        response.Errors[0].Code.Should().Be("UNKNOWN_MOVEMENT");
+    }
+
+    [Fact]
+    public async Task ParseWorkoutText_WithWarnings_ReturnsWarningsInResponse()
+    {
+        // Arrange
+        var request = new ParseWorkoutRequest { Text = "5 rounds\n10 widowmakers" };
+        var parsedDto = _fixture.Build<ParsedWorkoutDto>()
+            .With(x => x.WorkoutType, WorkoutType.Rounds)
+            .Create();
+        var parsedResult = new ParsedWorkoutResult
+        {
+            Success = true,
+            ParsedWorkout = parsedDto,
+            ConfidenceScore = 80,
+            Errors = new List<ParsingErrorDto>(),
+            Warnings = new List<ParsingWarningDto>
+            {
+                new() { LineNumber = 2, Message = "Movement 'widowmakers' was not recognized.", WarningType = "UnknownMovement", Suggestion = "Did you mean 'walking lunges'?" }
+            }
+        };
+
+        _workoutParsingService.ParseWorkoutAsync(request.Text, Arg.Any<CancellationToken>())
+            .Returns(parsedResult);
+
+        // Act
+        var result = await _sut.ParseWorkoutText(request, CancellationToken.None);
+
+        // Assert
+        var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
+        var response = okResult.Value.Should().BeOfType<ParsedWorkoutResultResponse>().Subject;
+        response.Success.Should().BeTrue();
+        response.Warnings.Should().HaveCount(1);
+        response.Warnings[0].Code.Should().Be("UNKNOWN_MOVEMENT");
+        response.Warnings[0].Suggestion.Should().Contain("walking lunges");
     }
 
     [Fact]
@@ -118,17 +180,386 @@ public class WorkoutsControllerTests
                 new() { MovementName = "Pull-up", SequenceOrder = 2, RepCount = 21, MovementDefinitionId = 2 }
             })
             .Create();
+        var parsedResult = new ParsedWorkoutResult
+        {
+            Success = true,
+            ParsedWorkout = parsedDto,
+            ConfidenceScore = 100,
+            Errors = new List<ParsingErrorDto>(),
+            Warnings = new List<ParsingWarningDto>()
+        };
 
-        _workoutParsingService.ParseWorkoutTextAsync(request.Text, Arg.Any<CancellationToken>())
-            .Returns(parsedDto);
+        _workoutParsingService.ParseWorkoutAsync(request.Text, Arg.Any<CancellationToken>())
+            .Returns(parsedResult);
 
         // Act
         var result = await _sut.ParseWorkoutText(request, CancellationToken.None);
 
         // Assert
         var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
-        var response = okResult.Value.Should().BeOfType<ParsedWorkoutResponse>().Subject;
-        response.Movements.Should().HaveCount(2);
+        var response = okResult.Value.Should().BeOfType<ParsedWorkoutResultResponse>().Subject;
+        response.ParsedWorkout.Should().NotBeNull();
+        response.ParsedWorkout!.Movements.Should().HaveCount(2);
+    }
+
+    [Fact]
+    public async Task ParseWorkoutText_ReturnsConfidenceScoring()
+    {
+        // Arrange
+        var request = new ParseWorkoutRequest { Text = "20 min AMRAP\n10 Pull-ups" };
+        var parsedDto = _fixture.Create<ParsedWorkoutDto>();
+        var parsedResult = new ParsedWorkoutResult
+        {
+            Success = true,
+            ParsedWorkout = parsedDto,
+            ConfidenceScore = 85,
+            Errors = new List<ParsingErrorDto>(),
+            Warnings = new List<ParsingWarningDto>(),
+            ConfidenceDetails = new ConfidenceBreakdown
+            {
+                WorkoutTypeConfidence = 100,
+                TimeDomainConfidence = 100,
+                MovementIdentificationConfidence = 80,
+                MovementsIdentified = 1,
+                TotalMovementLines = 1,
+                MovementsWithCompleteData = 1
+            }
+        };
+
+        _workoutParsingService.ParseWorkoutAsync(request.Text, Arg.Any<CancellationToken>())
+            .Returns(parsedResult);
+
+        // Act
+        var result = await _sut.ParseWorkoutText(request, CancellationToken.None);
+
+        // Assert
+        var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
+        var response = okResult.Value.Should().BeOfType<ParsedWorkoutResultResponse>().Subject;
+        response.ParseConfidence.Should().Be(0.85m);
+        response.ConfidenceLevel.Should().Be("High");
+        response.ConfidenceDetails.Should().NotBeNull();
+        response.ConfidenceDetails!.WorkoutTypeConfidence.Should().Be(1.0m);
+    }
+
+    [Fact]
+    public async Task ParseWorkoutText_PartialResult_ReturnsPartialResultWhenFailed()
+    {
+        // Arrange
+        var request = new ParseWorkoutRequest { Text = "20 min AMRAP\nSome random text" };
+        var parsedDto = _fixture.Build<ParsedWorkoutDto>()
+            .With(x => x.WorkoutType, WorkoutType.Amrap)
+            .With(x => x.TimeCapSeconds, 1200)
+            .With(x => x.Movements, new List<ParsedMovementDto>())
+            .Create();
+        var parsedResult = new ParsedWorkoutResult
+        {
+            Success = false,
+            ParsedWorkout = parsedDto,
+            ConfidenceScore = 30,
+            Errors = new List<ParsingErrorDto>
+            {
+                new() { Message = "No movements detected", ErrorType = "NoMovementsDetected" }
+            },
+            Warnings = new List<ParsingWarningDto>()
+        };
+
+        _workoutParsingService.ParseWorkoutAsync(request.Text, Arg.Any<CancellationToken>())
+            .Returns(parsedResult);
+
+        // Act
+        var result = await _sut.ParseWorkoutText(request, CancellationToken.None);
+
+        // Assert
+        var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
+        var response = okResult.Value.Should().BeOfType<ParsedWorkoutResultResponse>().Subject;
+        response.Success.Should().BeFalse();
+        response.ParsedWorkout.Should().BeNull();
+        response.PartialResult.Should().NotBeNull();
+        response.PartialResult!.WorkoutType.Should().Be("Amrap");
+    }
+
+    [Fact]
+    public async Task ParseWorkoutText_MultipleErrors_ReturnsAllErrorsFormatted()
+    {
+        // Arrange
+        var request = new ParseWorkoutRequest { Text = "Invalid workout text" };
+        var parsedResult = new ParsedWorkoutResult
+        {
+            Success = false,
+            ParsedWorkout = null,
+            ConfidenceScore = 0,
+            Errors = new List<ParsingErrorDto>
+            {
+                new() { LineNumber = 1, Message = "Empty input", ErrorType = "EmptyInput", ErrorCode = 100 },
+                new() { LineNumber = 2, Message = "No movements detected", ErrorType = "NoMovementsDetected", ErrorCode = 103 }
+            },
+            Warnings = new List<ParsingWarningDto>()
+        };
+
+        _workoutParsingService.ParseWorkoutAsync(request.Text, Arg.Any<CancellationToken>())
+            .Returns(parsedResult);
+
+        // Act
+        var result = await _sut.ParseWorkoutText(request, CancellationToken.None);
+
+        // Assert
+        var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
+        var response = okResult.Value.Should().BeOfType<ParsedWorkoutResultResponse>().Subject;
+        response.Success.Should().BeFalse();
+        response.Errors.Should().HaveCount(2);
+        response.Errors[0].Code.Should().Be("EMPTY_INPUT");
+        response.Errors[1].Code.Should().Be("NO_MOVEMENTS_DETECTED");
+    }
+
+    [Fact]
+    public async Task ParseWorkoutText_WithSuggestion_ReturnsSuggestionInResponse()
+    {
+        // Arrange
+        var request = new ParseWorkoutRequest { Text = "10 Burpies" };
+        var parsedDto = _fixture.Build<ParsedWorkoutDto>()
+            .With(x => x.Movements, new List<ParsedMovementDto>())
+            .Create();
+        var parsedResult = new ParsedWorkoutResult
+        {
+            Success = true,
+            ParsedWorkout = parsedDto,
+            ConfidenceScore = 70,
+            Errors = new List<ParsingErrorDto>(),
+            Warnings = new List<ParsingWarningDto>
+            {
+                new()
+                {
+                    LineNumber = 1,
+                    Message = "Movement 'Burpies' not recognized.",
+                    WarningType = "UnknownMovement",
+                    Suggestion = "Did you mean 'Burpees'?",
+                    OriginalText = "10 Burpies",
+                    SimilarNames = new List<string> { "Burpees", "Bar-facing Burpees" }
+                }
+            }
+        };
+
+        _workoutParsingService.ParseWorkoutAsync(request.Text, Arg.Any<CancellationToken>())
+            .Returns(parsedResult);
+
+        // Act
+        var result = await _sut.ParseWorkoutText(request, CancellationToken.None);
+
+        // Assert
+        var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
+        var response = okResult.Value.Should().BeOfType<ParsedWorkoutResultResponse>().Subject;
+        response.Warnings.Should().HaveCount(1);
+        response.Warnings[0].Suggestion.Should().Be("Did you mean 'Burpees'?");
+        response.Warnings[0].OriginalText.Should().Be("10 Burpies");
+    }
+
+    [Fact]
+    public async Task ParseWorkoutText_ErrorWithLineNumber_ReturnsLineInResponse()
+    {
+        // Arrange
+        var request = new ParseWorkoutRequest { Text = "AMRAP 10\n-5 Push-ups" };
+        var parsedDto = _fixture.Build<ParsedWorkoutDto>()
+            .With(x => x.WorkoutType, WorkoutType.Amrap)
+            .Create();
+        var parsedResult = new ParsedWorkoutResult
+        {
+            Success = false,
+            ParsedWorkout = parsedDto,
+            ConfidenceScore = 40,
+            Errors = new List<ParsingErrorDto>
+            {
+                new()
+                {
+                    LineNumber = 2,
+                    Message = "Invalid rep count '-5'",
+                    ErrorType = "InvalidRepCount",
+                    ErrorCode = 204,
+                    OriginalText = "-5 Push-ups"
+                }
+            },
+            Warnings = new List<ParsingWarningDto>()
+        };
+
+        _workoutParsingService.ParseWorkoutAsync(request.Text, Arg.Any<CancellationToken>())
+            .Returns(parsedResult);
+
+        // Act
+        var result = await _sut.ParseWorkoutText(request, CancellationToken.None);
+
+        // Assert
+        var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
+        var response = okResult.Value.Should().BeOfType<ParsedWorkoutResultResponse>().Subject;
+        response.Errors[0].Line.Should().Be(2);
+        response.Errors[0].OriginalText.Should().Be("-5 Push-ups");
+    }
+
+    [Theory]
+    [InlineData(100, "Perfect")]
+    [InlineData(85, "High")]
+    [InlineData(70, "Medium")]
+    [InlineData(50, "Low")]
+    [InlineData(25, "Low")]
+    public async Task ParseWorkoutText_ConfidenceScore_MapsToCorrectLevel(int score, string expectedLevel)
+    {
+        // Arrange
+        var request = new ParseWorkoutRequest { Text = "Test workout" };
+        var parsedDto = _fixture.Create<ParsedWorkoutDto>();
+        var parsedResult = new ParsedWorkoutResult
+        {
+            Success = score >= 50,
+            ParsedWorkout = parsedDto,
+            ConfidenceScore = score,
+            Errors = new List<ParsingErrorDto>(),
+            Warnings = new List<ParsingWarningDto>()
+        };
+
+        _workoutParsingService.ParseWorkoutAsync(request.Text, Arg.Any<CancellationToken>())
+            .Returns(parsedResult);
+
+        // Act
+        var result = await _sut.ParseWorkoutText(request, CancellationToken.None);
+
+        // Assert
+        var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
+        var response = okResult.Value.Should().BeOfType<ParsedWorkoutResultResponse>().Subject;
+        response.ParseConfidence.Should().Be(score / 100m);
+        response.ConfidenceLevel.Should().Be(expectedLevel);
+    }
+
+    [Fact]
+    public async Task ParseWorkoutText_IsUsable_TrueWhenSuccessful()
+    {
+        // Arrange
+        var request = new ParseWorkoutRequest { Text = "20 min AMRAP\n10 Pull-ups" };
+        var parsedDto = _fixture.Create<ParsedWorkoutDto>();
+        var parsedResult = new ParsedWorkoutResult
+        {
+            Success = true,
+            ParsedWorkout = parsedDto,
+            ConfidenceScore = 85,
+            Errors = new List<ParsingErrorDto>(),
+            Warnings = new List<ParsingWarningDto>()
+        };
+
+        _workoutParsingService.ParseWorkoutAsync(request.Text, Arg.Any<CancellationToken>())
+            .Returns(parsedResult);
+
+        // Act
+        var result = await _sut.ParseWorkoutText(request, CancellationToken.None);
+
+        // Assert
+        var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
+        var response = okResult.Value.Should().BeOfType<ParsedWorkoutResultResponse>().Subject;
+        response.IsUsable.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task ParseWorkoutText_IsUsable_FalseWhenFailed()
+    {
+        // Arrange
+        var request = new ParseWorkoutRequest { Text = "Invalid text" };
+        var parsedResult = new ParsedWorkoutResult
+        {
+            Success = false,
+            ParsedWorkout = null,
+            ConfidenceScore = 10,
+            Errors = new List<ParsingErrorDto>
+            {
+                new() { ErrorType = "EmptyInput", Message = "No valid input" }
+            },
+            Warnings = new List<ParsingWarningDto>()
+        };
+
+        _workoutParsingService.ParseWorkoutAsync(request.Text, Arg.Any<CancellationToken>())
+            .Returns(parsedResult);
+
+        // Act
+        var result = await _sut.ParseWorkoutText(request, CancellationToken.None);
+
+        // Assert
+        var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
+        var response = okResult.Value.Should().BeOfType<ParsedWorkoutResultResponse>().Subject;
+        response.IsUsable.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task ParseWorkoutText_ConfidenceDetails_MapsAllFields()
+    {
+        // Arrange
+        var request = new ParseWorkoutRequest { Text = "AMRAP 20\n10 Pull-ups\n15 Push-ups\n20 Squats" };
+        var parsedDto = _fixture.Create<ParsedWorkoutDto>();
+        var parsedResult = new ParsedWorkoutResult
+        {
+            Success = true,
+            ParsedWorkout = parsedDto,
+            ConfidenceScore = 90,
+            Errors = new List<ParsingErrorDto>(),
+            Warnings = new List<ParsingWarningDto>(),
+            ConfidenceDetails = new ConfidenceBreakdown
+            {
+                WorkoutTypeConfidence = 100,
+                TimeDomainConfidence = 100,
+                MovementIdentificationConfidence = 90,
+                MovementsIdentified = 3,
+                TotalMovementLines = 3,
+                MovementsWithCompleteData = 3
+            }
+        };
+
+        _workoutParsingService.ParseWorkoutAsync(request.Text, Arg.Any<CancellationToken>())
+            .Returns(parsedResult);
+
+        // Act
+        var result = await _sut.ParseWorkoutText(request, CancellationToken.None);
+
+        // Assert
+        var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
+        var response = okResult.Value.Should().BeOfType<ParsedWorkoutResultResponse>().Subject;
+        response.ConfidenceDetails.Should().NotBeNull();
+        response.ConfidenceDetails!.WorkoutTypeConfidence.Should().Be(1.0m);
+        response.ConfidenceDetails.TimeDomainConfidence.Should().Be(1.0m);
+        response.ConfidenceDetails.MovementIdentificationConfidence.Should().Be(0.9m);
+        response.ConfidenceDetails.MovementsIdentified.Should().Be(3);
+        response.ConfidenceDetails.TotalMovementLines.Should().Be(3);
+        response.ConfidenceDetails.MovementsWithCompleteData.Should().Be(3);
+        response.ConfidenceDetails.MovementIdentificationRate.Should().Be(100.0m);
+    }
+
+    [Fact]
+    public async Task ParseWorkoutText_MixedErrorsAndWarnings_ReturnsAllInSeparateLists()
+    {
+        // Arrange
+        var request = new ParseWorkoutRequest { Text = "For time:\n10 Pushups\n-5 Sqats" };
+        var parsedDto = _fixture.Build<ParsedWorkoutDto>()
+            .With(x => x.WorkoutType, WorkoutType.ForTime)
+            .Create();
+        var parsedResult = new ParsedWorkoutResult
+        {
+            Success = false,
+            ParsedWorkout = parsedDto,
+            ConfidenceScore = 35,
+            Errors = new List<ParsingErrorDto>
+            {
+                new() { LineNumber = 3, Message = "Invalid rep count", ErrorType = "InvalidRepCount" }
+            },
+            Warnings = new List<ParsingWarningDto>
+            {
+                new() { LineNumber = 2, Message = "Unknown movement 'Pushups'", WarningType = "UnknownMovement" },
+                new() { LineNumber = 3, Message = "Unknown movement 'Sqats'", WarningType = "UnknownMovement" }
+            }
+        };
+
+        _workoutParsingService.ParseWorkoutAsync(request.Text, Arg.Any<CancellationToken>())
+            .Returns(parsedResult);
+
+        // Act
+        var result = await _sut.ParseWorkoutText(request, CancellationToken.None);
+
+        // Assert
+        var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
+        var response = okResult.Value.Should().BeOfType<ParsedWorkoutResultResponse>().Subject;
+        response.Errors.Should().HaveCount(1);
+        response.Warnings.Should().HaveCount(2);
     }
 
     #endregion
