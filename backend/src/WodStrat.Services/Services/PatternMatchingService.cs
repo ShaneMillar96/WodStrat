@@ -177,6 +177,16 @@ public class PatternMatchingService : IPatternMatchingService
             return new RepScheme(reps, RepSchemeType.Fixed, fixedMatch.Value);
         }
 
+        // Try embedded chipper pattern as fallback: "3 Rounds: 21-15-9 of:"
+        var embeddedMatch = WorkoutPatterns.EmbeddedChipperRepSchemePattern().Match(text);
+        if (embeddedMatch.Success)
+        {
+            var repsStr = embeddedMatch.Groups[1].Value;
+            var reps = repsStr.Split('-').Select(int.Parse).ToList();
+            var type = DetermineRepSchemeType(reps);
+            return new RepScheme(reps, type, embeddedMatch.Value);
+        }
+
         return null;
     }
 

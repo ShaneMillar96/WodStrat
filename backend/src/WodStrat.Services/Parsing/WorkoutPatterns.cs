@@ -88,6 +88,13 @@ public static partial class WorkoutPatterns
     public static partial Regex ChipperRepSchemePattern();
 
     /// <summary>
+    /// Embedded chipper rep scheme within a larger line (e.g., "3 Rounds: 21-15-9 of:")
+    /// Groups: 1=rep scheme (e.g., "21-15-9")
+    /// </summary>
+    [GeneratedRegex(@"(?<!\d)(\d+(?:-\d+){2,})(?!\d)", RegexOptions.Compiled)]
+    public static partial Regex EmbeddedChipperRepSchemePattern();
+
+    /// <summary>
     /// Fixed rep pattern: "5 rounds of 10 reps", "3 sets of 12"
     /// Groups: 1=rounds, 2=reps
     /// </summary>
@@ -212,7 +219,9 @@ public static partial class WorkoutPatterns
                EmomPattern().IsMatch(trimmed) ||
                TabataPattern().IsMatch(trimmed) ||
                TimeCapPattern().IsMatch(trimmed) ||
-               ChipperRepSchemePattern().IsMatch(trimmed);
+               ChipperRepSchemePattern().IsMatch(trimmed) ||
+               EmbeddedChipperRepSchemePattern().IsMatch(trimmed) ||
+               RoundsPattern().IsMatch(trimmed);
     }
 
     #endregion

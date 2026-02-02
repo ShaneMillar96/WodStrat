@@ -1,7 +1,7 @@
 import { useMutation } from '@tanstack/react-query';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { workoutService } from '../services/workoutService';
-import type { ParseWorkoutResponse, ParsingIssue } from '../types';
+import type { ParseWorkoutResponse, ParsingIssue, ParsedWorkout } from '../types';
 
 /**
  * Hook for parsing workout text with enhanced error handling
@@ -15,6 +15,28 @@ export function useWorkoutParsing() {
   });
 
   const response = mutation.data as ParseWorkoutResponse | undefined;
+
+  // Transform parsedWorkout to include errors and isValid from root-level response
+  // This fixes the type mismatch between API response and frontend expectations
+  const transformedParsedWorkout: ParsedWorkout | null = useMemo(() => {
+    if (!response?.parsedWorkout) {
+      return null;
+    }
+
+    // Convert ParsingIssue[] (API format) to ParsingError[] (ParsedWorkout format)
+    const parsingErrors = (response.errors ?? []).map(issue => ({
+      errorType: issue.code,
+      message: issue.message,
+      lineNumber: issue.line ?? 0,
+      originalText: null,
+    }));
+
+    return {
+      ...response.parsedWorkout,
+      errors: parsingErrors,
+      isValid: response.success && parsingErrors.length === 0 && (response.parsedWorkout.movements?.length ?? 0) > 0,
+    };
+  }, [response]);
 
   // Reset dismissed state when new parse occurs
   const parseWorkout = useCallback(async (text: string) => {
@@ -42,7 +64,7 @@ export function useWorkoutParsing() {
 
     // Response data
     parseResponse: response,
-    parsedWorkout: response?.parsedWorkout ?? null,
+    parsedWorkout: transformedParsedWorkout,
     parseConfidence: response?.parseConfidence ?? null,
 
     // Errors and warnings

@@ -270,6 +270,21 @@ public class PatternMatchingServiceTests
         result.Should().BeNull();
     }
 
+    [Theory]
+    [InlineData("3 Rounds: 21-15-9 repetitions of:", new[] { 21, 15, 9 }, RepSchemeType.Descending)]
+    [InlineData("5 Rounds: 10-8-6-4-2 of:", new[] { 10, 8, 6, 4, 2 }, RepSchemeType.Descending)]
+    [InlineData("Complete 21-15-9 reps of each movement", new[] { 21, 15, 9 }, RepSchemeType.Descending)]
+    public void ExtractRepScheme_EmbeddedChipper_ReturnsCorrectData(string input, int[] expectedReps, RepSchemeType expectedType)
+    {
+        // Act
+        var result = _sut.ExtractRepScheme(input);
+
+        // Assert
+        result.Should().NotBeNull();
+        result!.Reps.Should().BeEquivalentTo(expectedReps);
+        result.Type.Should().Be(expectedType);
+    }
+
     #endregion
 
     #region ExtractWeight Tests
@@ -957,6 +972,12 @@ public class PatternMatchingServiceTests
     [InlineData("21-15-9")]
     [InlineData("")]
     [InlineData("  ")]
+    [InlineData("3 Rounds")]
+    [InlineData("5 Rounds:")]
+    [InlineData("3 Rounds: 21-15-9 repetitions of:")]
+    [InlineData("21-15-9 repetitions of:")]
+    [InlineData("21-15-9 reps of:")]
+    [InlineData("50-40-30-20-10 of:")]
     public void IsHeaderLine_HeaderLines_ReturnsTrue(string line)
     {
         // Act
