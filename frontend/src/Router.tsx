@@ -8,6 +8,7 @@ import { BenchmarksPage } from './pages/BenchmarksPage';
 import { StrategyPage } from './pages/StrategyPage';
 import { WorkoutsPage } from './pages/WorkoutsPage';
 import { WorkoutInputPage } from './pages/WorkoutInputPage';
+import { WorkoutDetailPage } from './pages/WorkoutDetailPage';
 
 /**
  * Application route definitions
@@ -59,6 +60,14 @@ const router = createBrowserRouter([
       },
       {
         path: '/workouts/new',
+        element: <WorkoutInputPage />,
+      },
+      {
+        path: '/workouts/:id',
+        element: <WorkoutDetailPage />,
+      },
+      {
+        path: '/workouts/:id/edit',
         element: <WorkoutInputPage />,
       },
       {

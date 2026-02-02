@@ -12,3 +12,29 @@ export type { ParsedWorkoutPreviewProps } from './ParsedWorkoutPreview';
 
 export { WorkoutEditForm } from './WorkoutEditForm';
 export type { WorkoutEditFormProps } from './WorkoutEditForm';
+
+// New components
+export { MovementCard } from './MovementCard';
+export type { MovementCardProps } from './MovementCard';
+
+export { MovementList } from './MovementList';
+export type { MovementListProps } from './MovementList';
+
+export { WorkoutTypeTag } from './WorkoutTypeTag';
+export type { WorkoutTypeTagProps } from './WorkoutTypeTag';
+
+export { ConfidenceIndicator } from './ConfidenceIndicator';
+export type { ConfidenceIndicatorProps } from './ConfidenceIndicator';
+
+export { WorkoutMetadata } from './WorkoutMetadata';
+export type { WorkoutMetadataProps } from './WorkoutMetadata';
+
+// Error display components
+export { ParsingErrorList } from './ParsingErrorList';
+export type { ParsingErrorListProps } from './ParsingErrorList';
+
+export { ParsingWarningBanner } from './ParsingWarningBanner';
+export type { ParsingWarningBannerProps } from './ParsingWarningBanner';
+
+export { LineErrorHighlight } from './LineErrorHighlight';
+export type { LineErrorHighlightProps } from './LineErrorHighlight';
