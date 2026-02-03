@@ -4,3 +4,4 @@ export { athleteService } from './athleteService';
 export { benchmarkService } from './benchmarkService';
 export { workoutService } from './workoutService';
 export { movementService } from './movementService';
+export { volumeLoadService } from './volumeLoadService';

@@ -46,3 +46,5 @@ export {
   useMovementSearch,
   useMovements,
 } from './useMovements';
+
+export { useWorkoutVolumeLoad } from './useVolumeLoad';

@@ -38,3 +38,16 @@ export type { ParsingWarningBannerProps } from './ParsingWarningBanner';
 
 export { LineErrorHighlight } from './LineErrorHighlight';
 export type { LineErrorHighlightProps } from './LineErrorHighlight';
+
+// Volume load components
+export { LoadClassificationBadge } from './LoadClassificationBadge';
+export type { LoadClassificationBadgeProps } from './LoadClassificationBadge';
+
+export { ScalingRecommendation } from './ScalingRecommendation';
+export type { ScalingRecommendationProps } from './ScalingRecommendation';
+
+export { MovementVolumeCard } from './MovementVolumeCard';
+export type { MovementVolumeCardProps } from './MovementVolumeCard';
+
+export { VolumeLoadSummary } from './VolumeLoadSummary';
+export type { VolumeLoadSummaryProps } from './VolumeLoadSummary';

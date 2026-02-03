@@ -62,4 +62,13 @@ export const queryKeys = {
     search: (query: string) =>
       [...queryKeys.movements.all, 'search', query] as const,
   },
+
+  /**
+   * All volume load-related queries
+   */
+  volumeLoad: {
+    all: ['volumeLoad'] as const,
+    workout: (athleteId: number, workoutId: number) =>
+      [...queryKeys.volumeLoad.all, 'workout', athleteId, workoutId] as const,
+  },
 };

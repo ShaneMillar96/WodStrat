@@ -5,9 +5,12 @@ import {
   MovementList,
   WorkoutTypeTag,
   WorkoutMetadata,
+  VolumeLoadSummary,
 } from '../components/workouts';
 import { useWorkout } from '../hooks/useWorkout';
 import { useWorkoutMutations } from '../hooks/useWorkouts';
+import { useWorkoutVolumeLoad } from '../hooks/useVolumeLoad';
+import { useAthleteContext } from '../contexts/AthleteContext';
 import { ApiException } from '../services';
 
 /**
@@ -32,6 +35,20 @@ export const WorkoutDetailPage: React.FC = () => {
   // Hooks
   const { workout, isLoading, error: queryError } = useWorkout(workoutId);
   const { deleteWorkout, isDeleting, deleteSuccess, error: mutationError } = useWorkoutMutations();
+  const { athleteId } = useAthleteContext();
+
+  // Check if workout has weighted movements
+  const hasWeightedMovements = workout?.movements.some(m => m.loadValue !== null) ?? false;
+
+  // Volume load hook - only enabled when we have an athlete and weighted movements
+  const {
+    volumeLoad,
+    isLoading: isLoadingVolumeLoad,
+    error: volumeLoadError,
+    hasVolumeData,
+  } = useWorkoutVolumeLoad(athleteId, workoutId, {
+    enabled: hasWeightedMovements && !!athleteId,
+  });
 
   // Handle delete success
   useEffect(() => {
@@ -140,6 +157,39 @@ export const WorkoutDetailPage: React.FC = () => {
           </h3>
           <MovementList movements={workout.movements} showErrors={false} />
         </div>
+
+        {/* Volume Load Analysis */}
+        {hasWeightedMovements && (
+          <div className="mb-6">
+            {volumeLoadError ? (
+              <Alert variant="info" title="Volume Load Analysis">
+                Volume load analysis requires benchmark data. Add your strength benchmarks to see personalized load analysis.
+              </Alert>
+            ) : hasVolumeData && volumeLoad ? (
+              <VolumeLoadSummary
+                volumeLoad={volumeLoad}
+                isLoading={isLoadingVolumeLoad}
+              />
+            ) : isLoadingVolumeLoad ? (
+              <VolumeLoadSummary
+                volumeLoad={{
+                  workoutId: workoutId!,
+                  workoutName: '',
+                  movementVolumes: [],
+                  totalVolumeLoad: 0,
+                  totalVolumeLoadFormatted: '',
+                  overallAssessment: '',
+                  calculatedAt: new Date().toISOString(),
+                }}
+                isLoading={true}
+              />
+            ) : !athleteId ? (
+              <Alert variant="info" title="Volume Load Analysis">
+                Create an athlete profile to see personalized volume load analysis for this workout.
+              </Alert>
+            ) : null}
+          </div>
+        )}
 
         {/* Timestamps */}
         <div className="text-xs text-gray-400 border-t border-gray-100 pt-4">

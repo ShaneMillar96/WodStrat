@@ -84,6 +84,7 @@ builder.Services.AddScoped<IPatternMatchingService, PatternMatchingService>();
 builder.Services.AddScoped<IWorkoutParsingService, WorkoutParsingService>();
 builder.Services.AddScoped<IWorkoutService, WorkoutService>();
 builder.Services.AddScoped<IPacingService, PacingService>();
+builder.Services.AddScoped<IVolumeLoadService, VolumeLoadService>();
 
 // FluentValidation
 builder.Services.AddFluentValidationAutoValidation();

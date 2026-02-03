@@ -105,3 +105,17 @@ export {
   SEVERITY_BADGE_VARIANTS,
   SEVERITY_ALERT_VARIANTS,
 } from './parsingError';
+
+// Volume load types
+export type {
+  LoadClassification,
+  MovementVolumeLoad,
+  WorkoutVolumeLoadResult,
+  CalculateVolumeLoadRequest,
+} from './volumeLoad';
+
+export {
+  LOAD_CLASSIFICATION_BADGE_VARIANTS,
+  LOAD_CLASSIFICATION_LABELS,
+  LOAD_CLASSIFICATION_COLORS,
+} from './volumeLoad';
