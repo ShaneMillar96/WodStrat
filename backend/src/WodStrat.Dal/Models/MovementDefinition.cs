@@ -87,4 +87,9 @@ public class MovementDefinition
     /// Collection of workout movements referencing this definition.
     /// </summary>
     public ICollection<WorkoutMovement> WorkoutMovements { get; set; } = new List<WorkoutMovement>();
+
+    /// <summary>
+    /// Collection of benchmark mappings for this movement.
+    /// </summary>
+    public ICollection<BenchmarkMovementMapping> BenchmarkMappings { get; set; } = new List<BenchmarkMovementMapping>();
 }

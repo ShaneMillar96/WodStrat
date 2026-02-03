@@ -19,6 +19,8 @@ public class WodStratDbContext : DbContext, IWodStratDatabase
     public DbSet<MovementAlias> MovementAliases => Set<MovementAlias>();
     public DbSet<Workout> Workouts => Set<Workout>();
     public DbSet<WorkoutMovement> WorkoutMovements => Set<WorkoutMovement>();
+    public DbSet<BenchmarkMovementMapping> BenchmarkMovementMappings => Set<BenchmarkMovementMapping>();
+    public DbSet<PopulationBenchmarkPercentile> PopulationBenchmarkPercentiles => Set<PopulationBenchmarkPercentile>();
 
     public IQueryable<T> Get<T>() where T : class => Set<T>();
     public new void Add<T>(T entity) where T : class => Set<T>().Add(entity);
@@ -39,6 +41,7 @@ public class WodStratDbContext : DbContext, IWodStratDatabase
         modelBuilder.HasPostgresEnum<LoadUnit>("load_unit");
         modelBuilder.HasPostgresEnum<DistanceUnit>("distance_unit");
         modelBuilder.HasPostgresEnum<RepSchemeType>("rep_scheme_type");
+        modelBuilder.HasPostgresEnum<PacingLevel>("pacing_level");
 
         // Configure User entity
         modelBuilder.Entity<User>(entity =>
@@ -678,6 +681,148 @@ public class WodStratDbContext : DbContext, IWodStratDatabase
             entity.HasIndex(e => new { e.WorkoutId, e.MinuteStart, e.MinuteEnd })
                 .HasDatabaseName("idx_workout_movements_minute_range")
                 .HasFilter("minute_start IS NOT NULL");
+        });
+
+        // Configure BenchmarkMovementMapping entity
+        modelBuilder.Entity<BenchmarkMovementMapping>(entity =>
+        {
+            entity.ToTable("benchmark_movement_mappings");
+
+            // Primary key
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id)
+                .HasColumnName("id")
+                .ValueGeneratedOnAdd();
+
+            // Foreign keys
+            entity.Property(e => e.BenchmarkDefinitionId)
+                .HasColumnName("benchmark_definition_id")
+                .IsRequired();
+
+            entity.Property(e => e.MovementDefinitionId)
+                .HasColumnName("movement_definition_id")
+                .IsRequired();
+
+            // Mapping data
+            entity.Property(e => e.RelevanceFactor)
+                .HasColumnName("relevance_factor")
+                .HasPrecision(3, 2)
+                .HasDefaultValue(1.0m)
+                .IsRequired();
+
+            // Audit fields
+            entity.Property(e => e.CreatedAt)
+                .HasColumnName("created_at")
+                .HasDefaultValueSql("NOW()");
+
+            // Relationships
+            entity.HasOne(e => e.BenchmarkDefinition)
+                .WithMany(bd => bd.MovementMappings)
+                .HasForeignKey(e => e.BenchmarkDefinitionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.MovementDefinition)
+                .WithMany(md => md.BenchmarkMappings)
+                .HasForeignKey(e => e.MovementDefinitionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Indexes
+            entity.HasIndex(e => e.BenchmarkDefinitionId)
+                .HasDatabaseName("idx_benchmark_movement_mappings_benchmark_id");
+
+            entity.HasIndex(e => e.MovementDefinitionId)
+                .HasDatabaseName("idx_benchmark_movement_mappings_movement_id");
+
+            // Unique constraint
+            entity.HasIndex(e => new { e.BenchmarkDefinitionId, e.MovementDefinitionId })
+                .HasDatabaseName("uq_benchmark_movement_mappings_benchmark_movement")
+                .IsUnique();
+        });
+
+        // Configure PopulationBenchmarkPercentile entity
+        modelBuilder.Entity<PopulationBenchmarkPercentile>(entity =>
+        {
+            entity.ToTable("population_benchmark_percentiles");
+
+            // Primary key
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id)
+                .HasColumnName("id")
+                .ValueGeneratedOnAdd();
+
+            // Foreign key
+            entity.Property(e => e.BenchmarkDefinitionId)
+                .HasColumnName("benchmark_definition_id")
+                .IsRequired();
+
+            // Percentile data
+            entity.Property(e => e.Percentile20)
+                .HasColumnName("percentile_20")
+                .HasPrecision(10, 2)
+                .IsRequired();
+
+            entity.Property(e => e.Percentile40)
+                .HasColumnName("percentile_40")
+                .HasPrecision(10, 2)
+                .IsRequired();
+
+            entity.Property(e => e.Percentile60)
+                .HasColumnName("percentile_60")
+                .HasPrecision(10, 2)
+                .IsRequired();
+
+            entity.Property(e => e.Percentile80)
+                .HasColumnName("percentile_80")
+                .HasPrecision(10, 2)
+                .IsRequired();
+
+            entity.Property(e => e.Percentile95)
+                .HasColumnName("percentile_95")
+                .HasPrecision(10, 2)
+                .IsRequired();
+
+            // Segmentation
+            entity.Property(e => e.Gender)
+                .HasColumnName("gender")
+                .HasMaxLength(20);
+
+            entity.Property(e => e.ExperienceLevel)
+                .HasColumnName("experience_level");
+
+            // Audit fields
+            entity.Property(e => e.CreatedAt)
+                .HasColumnName("created_at")
+                .HasDefaultValueSql("NOW()");
+
+            entity.Property(e => e.UpdatedAt)
+                .HasColumnName("updated_at")
+                .HasDefaultValueSql("NOW()");
+
+            // Relationships
+            entity.HasOne(e => e.BenchmarkDefinition)
+                .WithMany(bd => bd.PopulationPercentiles)
+                .HasForeignKey(e => e.BenchmarkDefinitionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Indexes
+            entity.HasIndex(e => e.BenchmarkDefinitionId)
+                .HasDatabaseName("idx_population_benchmark_percentiles_benchmark_id");
+
+            entity.HasIndex(e => e.Gender)
+                .HasDatabaseName("idx_population_benchmark_percentiles_gender")
+                .HasFilter("gender IS NOT NULL");
+
+            entity.HasIndex(e => e.ExperienceLevel)
+                .HasDatabaseName("idx_population_benchmark_percentiles_experience_level")
+                .HasFilter("experience_level IS NOT NULL");
+
+            entity.HasIndex(e => new { e.BenchmarkDefinitionId, e.Gender, e.ExperienceLevel })
+                .HasDatabaseName("idx_population_benchmark_percentiles_segment");
+
+            // Unique constraint per segmentation
+            entity.HasIndex(e => new { e.BenchmarkDefinitionId, e.Gender, e.ExperienceLevel })
+                .HasDatabaseName("uq_population_benchmark_percentiles_segment")
+                .IsUnique();
         });
     }
 }

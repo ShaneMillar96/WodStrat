@@ -62,4 +62,14 @@ public class BenchmarkDefinition
     /// Collection of athlete benchmarks for this definition.
     /// </summary>
     public ICollection<AthleteBenchmark> AthleteBenchmarks { get; set; } = new List<AthleteBenchmark>();
+
+    /// <summary>
+    /// Collection of movement mappings for this benchmark.
+    /// </summary>
+    public ICollection<BenchmarkMovementMapping> MovementMappings { get; set; } = new List<BenchmarkMovementMapping>();
+
+    /// <summary>
+    /// Collection of population percentiles for this benchmark.
+    /// </summary>
+    public ICollection<PopulationBenchmarkPercentile> PopulationPercentiles { get; set; } = new List<PopulationBenchmarkPercentile>();
 }

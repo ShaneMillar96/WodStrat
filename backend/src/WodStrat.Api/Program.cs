@@ -29,6 +29,7 @@ dataSourceBuilder.MapEnum<MovementCategory>("movement_category");
 dataSourceBuilder.MapEnum<LoadUnit>("load_unit");
 dataSourceBuilder.MapEnum<DistanceUnit>("distance_unit");
 dataSourceBuilder.MapEnum<RepSchemeType>("rep_scheme_type");
+dataSourceBuilder.MapEnum<PacingLevel>("pacing_level");
 var dataSource = dataSourceBuilder.Build();
 
 builder.Services.AddDbContext<WodStratDbContext>(options =>
@@ -82,6 +83,7 @@ builder.Services.AddScoped<IMovementDefinitionService, MovementDefinitionService
 builder.Services.AddScoped<IPatternMatchingService, PatternMatchingService>();
 builder.Services.AddScoped<IWorkoutParsingService, WorkoutParsingService>();
 builder.Services.AddScoped<IWorkoutService, WorkoutService>();
+builder.Services.AddScoped<IPacingService, PacingService>();
 
 // FluentValidation
 builder.Services.AddFluentValidationAutoValidation();
