@@ -119,3 +119,20 @@ export {
   LOAD_CLASSIFICATION_LABELS,
   LOAD_CLASSIFICATION_COLORS,
 } from './volumeLoad';
+
+// Time estimate types
+export type {
+  ConfidenceLevel,
+  EstimateType,
+  RestRecommendation,
+  TimeEstimateResult,
+  EmomFeasibility,
+  CalculateTimeEstimateRequest,
+} from './timeEstimate';
+
+export {
+  CONFIDENCE_LEVEL_BADGE_VARIANTS,
+  CONFIDENCE_LEVEL_LABELS,
+  CONFIDENCE_LEVEL_COLORS,
+  EMOM_FEASIBILITY_COLORS,
+} from './timeEstimate';

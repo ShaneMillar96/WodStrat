@@ -32,6 +32,24 @@ services:
     profiles:
       - migrate
 
+  flyway-local:
+    image: flyway/flyway
+    container_name: wodstrat-flyway-local
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      FLYWAY_URL: jdbc:postgresql://postgres:5432/wodstrat
+      FLYWAY_USER: wodstrat
+      FLYWAY_PASSWORD: wodstrat_dev
+      FLYWAY_LOCATIONS: filesystem:/flyway/sql,filesystem:/flyway/sql-local
+    volumes:
+      - ../db/migrations:/flyway/sql
+      - ../db/local-migrations:/flyway/sql-local
+    command: ["info"]
+    profiles:
+      - migrate-local
+
   backend:
     build:
       context: ../backend/src/WodStrat.Api

@@ -71,4 +71,15 @@ export const queryKeys = {
     workout: (athleteId: number, workoutId: number) =>
       [...queryKeys.volumeLoad.all, 'workout', athleteId, workoutId] as const,
   },
+
+  /**
+   * All time estimate-related queries
+   */
+  timeEstimate: {
+    all: ['timeEstimate'] as const,
+    workout: (athleteId: number, workoutId: number) =>
+      [...queryKeys.timeEstimate.all, 'workout', athleteId, workoutId] as const,
+    emomFeasibility: (athleteId: number, workoutId: number) =>
+      [...queryKeys.timeEstimate.all, 'emom', athleteId, workoutId] as const,
+  },
 };

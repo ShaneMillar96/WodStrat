@@ -51,3 +51,22 @@ export type { MovementVolumeCardProps } from './MovementVolumeCard';
 
 export { VolumeLoadSummary } from './VolumeLoadSummary';
 export type { VolumeLoadSummaryProps } from './VolumeLoadSummary';
+
+// Time estimate components
+export { ConfidenceLevelIndicator } from './ConfidenceLevelIndicator';
+export type { ConfidenceLevelIndicatorProps } from './ConfidenceLevelIndicator';
+
+export { TimeRangeDisplay } from './TimeRangeDisplay';
+export type { TimeRangeDisplayProps } from './TimeRangeDisplay';
+
+export { AmrapEstimateDisplay } from './AmrapEstimateDisplay';
+export type { AmrapEstimateDisplayProps } from './AmrapEstimateDisplay';
+
+export { EmomFeasibilityTimeline } from './EmomFeasibilityTimeline';
+export type { EmomFeasibilityTimelineProps } from './EmomFeasibilityTimeline';
+
+export { RestRecommendationCard } from './RestRecommendationCard';
+export type { RestRecommendationCardProps } from './RestRecommendationCard';
+
+export { TimeEstimateSummary } from './TimeEstimateSummary';
+export type { TimeEstimateSummaryProps } from './TimeEstimateSummary';

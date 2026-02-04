@@ -21,6 +21,7 @@ public class WodStratDbContext : DbContext, IWodStratDatabase
     public DbSet<WorkoutMovement> WorkoutMovements => Set<WorkoutMovement>();
     public DbSet<BenchmarkMovementMapping> BenchmarkMovementMappings => Set<BenchmarkMovementMapping>();
     public DbSet<PopulationBenchmarkPercentile> PopulationBenchmarkPercentiles => Set<PopulationBenchmarkPercentile>();
+    public DbSet<WorkoutTimeReference> WorkoutTimeReferences => Set<WorkoutTimeReference>();
 
     public IQueryable<T> Get<T>() where T : class => Set<T>();
     public new void Add<T>(T entity) where T : class => Set<T>().Add(entity);
@@ -822,6 +823,82 @@ public class WodStratDbContext : DbContext, IWodStratDatabase
             // Unique constraint per segmentation
             entity.HasIndex(e => new { e.BenchmarkDefinitionId, e.Gender, e.ExperienceLevel })
                 .HasDatabaseName("uq_population_benchmark_percentiles_segment")
+                .IsUnique();
+        });
+
+        // Configure WorkoutTimeReference entity
+        modelBuilder.Entity<WorkoutTimeReference>(entity =>
+        {
+            entity.ToTable("workout_time_references");
+
+            // Primary key
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id)
+                .HasColumnName("id")
+                .ValueGeneratedOnAdd();
+
+            // Workout identification
+            entity.Property(e => e.WorkoutName)
+                .HasColumnName("workout_name")
+                .HasMaxLength(100)
+                .IsRequired();
+
+            // Percentile times (in seconds)
+            entity.Property(e => e.Percentile20Seconds)
+                .HasColumnName("percentile_20_seconds")
+                .IsRequired();
+
+            entity.Property(e => e.Percentile40Seconds)
+                .HasColumnName("percentile_40_seconds")
+                .IsRequired();
+
+            entity.Property(e => e.Percentile60Seconds)
+                .HasColumnName("percentile_60_seconds")
+                .IsRequired();
+
+            entity.Property(e => e.Percentile80Seconds)
+                .HasColumnName("percentile_80_seconds")
+                .IsRequired();
+
+            entity.Property(e => e.Percentile95Seconds)
+                .HasColumnName("percentile_95_seconds")
+                .IsRequired();
+
+            // Segmentation
+            entity.Property(e => e.Gender)
+                .HasColumnName("gender")
+                .HasMaxLength(20);
+
+            entity.Property(e => e.ExperienceLevel)
+                .HasColumnName("experience_level");
+
+            // Audit fields
+            entity.Property(e => e.CreatedAt)
+                .HasColumnName("created_at")
+                .HasDefaultValueSql("NOW()");
+
+            entity.Property(e => e.UpdatedAt)
+                .HasColumnName("updated_at")
+                .HasDefaultValueSql("NOW()");
+
+            // Indexes
+            entity.HasIndex(e => e.WorkoutName)
+                .HasDatabaseName("idx_workout_time_references_workout_name");
+
+            entity.HasIndex(e => e.Gender)
+                .HasDatabaseName("idx_workout_time_references_gender")
+                .HasFilter("gender IS NOT NULL");
+
+            entity.HasIndex(e => e.ExperienceLevel)
+                .HasDatabaseName("idx_workout_time_references_experience_level")
+                .HasFilter("experience_level IS NOT NULL");
+
+            entity.HasIndex(e => new { e.WorkoutName, e.Gender, e.ExperienceLevel })
+                .HasDatabaseName("idx_workout_time_references_segment");
+
+            // Unique constraint per segmentation
+            entity.HasIndex(e => new { e.WorkoutName, e.Gender, e.ExperienceLevel })
+                .HasDatabaseName("uq_workout_time_references_name_segment")
                 .IsUnique();
         });
     }

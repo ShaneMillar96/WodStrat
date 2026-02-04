@@ -48,3 +48,5 @@ export {
 } from './useMovements';
 
 export { useWorkoutVolumeLoad } from './useVolumeLoad';
+
+export { useTimeEstimate, useEmomFeasibility } from './useTimeEstimate';

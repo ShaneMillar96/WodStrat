@@ -332,7 +332,86 @@ c. **Performance Testing**:
    - Test with realistic data volumes
    - Validate query performance and optimization
 
-### 9. **Generate Test Implementation Report**
+### 9. **Manual API Endpoint Testing**
+
+After unit tests pass, perform manual endpoint testing using curl against the local development environment with the local test user.
+
+a. **Local Test Infrastructure**:
+   - Test data is seeded via `db/local-migrations/V1000__seed_local_test_data.sql`
+   - Run local migrations: `cd infra && docker compose --profile migrate-local run --rm flyway-local migrate`
+   - Local test user credentials: `localtest@example.com` / `TestPassword123`
+   - Test user has: Athlete (ID: 3), 12 benchmarks, 3 workouts (ForTime ID:7, AMRAP ID:8, EMOM ID:9)
+
+b. **Start Backend for Testing**:
+   ```bash
+   # Ensure database is running
+   cd infra && docker compose up -d postgres
+
+   # Start backend (in background or separate terminal)
+   cd backend && DB_CONNECTION_STRING="Host=localhost;Port=5432;Database=wodstrat;Username=wodstrat;Password=wodstrat_dev" dotnet run --project src/WodStrat.Api
+   ```
+
+c. **Authenticate and Get JWT Token**:
+   ```bash
+   # Get JWT token
+   TOKEN=$(curl -s -X POST http://localhost:5000/api/auth/login \
+     -H "Content-Type: application/json" \
+     -d '{"email":"localtest@example.com","password":"TestPassword123"}' \
+     | python3 -c "import sys,json; print(json.load(sys.stdin).get('token',''))")
+
+   echo "Token: $TOKEN"
+   ```
+
+d. **Test Each New Endpoint**:
+   For each endpoint implemented in the feature:
+
+   ```bash
+   # GET endpoint example
+   curl -s -w "\nHTTP Status: %{http_code}\n" \
+     http://localhost:5000/api/your-endpoint \
+     -H "Authorization: Bearer $TOKEN"
+
+   # POST endpoint example
+   curl -s -w "\nHTTP Status: %{http_code}\n" \
+     -X POST http://localhost:5000/api/your-endpoint \
+     -H "Authorization: Bearer $TOKEN" \
+     -H "Content-Type: application/json" \
+     -d '{"field1":"value1","field2":123}'
+   ```
+
+e. **Validate Error Cases**:
+   Test expected error responses:
+   ```bash
+   # Test 404 - Resource not found
+   curl -s -w "\nHTTP Status: %{http_code}\n" \
+     http://localhost:5000/api/endpoint/999 \
+     -H "Authorization: Bearer $TOKEN"
+
+   # Test 400 - Invalid request
+   curl -s -w "\nHTTP Status: %{http_code}\n" \
+     -X POST http://localhost:5000/api/endpoint \
+     -H "Authorization: Bearer $TOKEN" \
+     -H "Content-Type: application/json" \
+     -d '{"invalidField":"value"}'
+
+   # Test 401 - Unauthorized (no token)
+   curl -s -w "\nHTTP Status: %{http_code}\n" \
+     http://localhost:5000/api/endpoint
+   ```
+
+f. **Document Results**:
+   Record in test report:
+   - Each endpoint tested with HTTP status
+   - Sample responses for successful calls
+   - Error case validation results
+   - Any issues discovered
+
+g. **Troubleshooting**:
+   - If endpoints return 404, restart the backend to register new routes
+   - Verify database has test data: `psql` or check via API
+   - Check backend logs for errors
+
+### 10. **Generate Test Implementation Report**
 
 Create `/.work/$ARGUMENTS/review/test_implementation.md`:
 
@@ -431,6 +510,33 @@ Generated: [Current Date/Time]
 - **Integration Tests**: [Pass/Fail count] - [Success rate]%
 - **Overall**: [Total pass/fail] - [Overall success rate]%
 
+## Manual API Endpoint Testing
+
+### Test Setup
+- **Test User**: `localtest@example.com` / `TestPassword123`
+- **Test Athlete ID**: 3
+- **Test Data**: [List relevant test entities created by local migration]
+
+### Endpoint Test Results
+
+| Endpoint | Method | HTTP Status | Result |
+|----------|--------|-------------|--------|
+| `/api/your-endpoint` | GET | ✅ 200 | Returns expected data |
+| `/api/your-endpoint` | POST | ✅ 201 | Creates resource |
+| [Add all tested endpoints] | | | |
+
+### Error Case Validation
+
+| Scenario | Expected | Actual | Result |
+|----------|----------|--------|--------|
+| Resource not found | 404 | 404 | ✅ Pass |
+| Invalid request body | 400 | 400 | ✅ Pass |
+| Unauthorized access | 401 | 401 | ✅ Pass |
+| [Add all tested error cases] | | | |
+
+### Sample Responses
+[Include relevant JSON response samples for key endpoints]
+
 ## Code Coverage Analysis
 - **Service Layer Coverage**: [Percentage]% of new service methods
 - **Controller Coverage**: [Percentage]% of new controller actions
@@ -462,6 +568,10 @@ Generated: [Current Date/Time]
 ### Supporting Infrastructure: [Count]
 [List of customizations, builders, helpers created]
 
+### Local Test Infrastructure
+- `db/local-migrations/V1000__seed_local_test_data.sql` - Test user and data (local only)
+- `infra/docker-compose.yml` - flyway-local service with migrate-local profile
+
 ## Next Steps
 - All tests passing and coverage adequate: Proceed to `/finalize $ARGUMENTS`
 - Issues found: Address test failures and gaps before finalization
@@ -472,13 +582,25 @@ Generated: [Current Date/Time]
 **Recommendation**: [Proceed to Finalize/Address Issues/Enhance Coverage]
 ```
 
-### 10. **Test Maintenance Documentation**
+### 11. **Test Maintenance Documentation**
 
 Provide guidance on:
 - How to maintain and update tests as code evolves
 - Test data management best practices
 - Integration with CI/CD pipeline
 - Performance testing guidelines
+
+a. **Local Test Data Management**:
+   - Local test migrations are in `db/local-migrations/` (not deployed to other environments)
+   - Version numbers should start at V1000 to avoid conflicts with main migrations
+   - To add new test data for a feature, create or update the seed migration
+   - Run local migrations: `cd infra && docker compose --profile migrate-local run --rm flyway-local migrate`
+   - The local test user has IDs starting at 3 to avoid conflicts with existing data
+
+b. **Updating Test User Data**:
+   - If new features require additional test data (e.g., new entity types), update `V1000__seed_local_test_data.sql`
+   - Ensure foreign key relationships are maintained
+   - Document any new test entities in the migration comments
 
 ## Quality Standards
 
@@ -492,7 +614,8 @@ Provide guidance on:
 
 - **Test Frameworks**: xUnit, NSubstitute, AutoFixture (Backend); Jest, React Testing Library (Frontend)
 - **Database**: Test database setup and teardown
-- **API Testing**: Integration with ASP.NET Core test host
+- **Local Test Data**: `db/local-migrations/` with flyway-local service (local environment only)
+- **API Testing**: Integration with ASP.NET Core test host + manual curl testing
 - **Frontend Testing**: Component and hook testing utilities
 - **CI/CD**: Preparation for automated test execution
 - **Coverage Tools**: Integration with code coverage analysis

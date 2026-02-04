@@ -6,10 +6,12 @@ import {
   WorkoutTypeTag,
   WorkoutMetadata,
   VolumeLoadSummary,
+  TimeEstimateSummary,
 } from '../components/workouts';
 import { useWorkout } from '../hooks/useWorkout';
 import { useWorkoutMutations } from '../hooks/useWorkouts';
 import { useWorkoutVolumeLoad } from '../hooks/useVolumeLoad';
+import { useTimeEstimate, useEmomFeasibility } from '../hooks/useTimeEstimate';
 import { useAthleteContext } from '../contexts/AthleteContext';
 import { ApiException } from '../services';
 
@@ -48,6 +50,24 @@ export const WorkoutDetailPage: React.FC = () => {
     hasVolumeData,
   } = useWorkoutVolumeLoad(athleteId, workoutId, {
     enabled: hasWeightedMovements && !!athleteId,
+  });
+
+  // Time estimate hook - enabled when we have an athlete
+  const {
+    timeEstimate,
+    isLoading: isLoadingTimeEstimate,
+    error: timeEstimateError,
+    hasEstimateData,
+  } = useTimeEstimate(athleteId, workoutId, {
+    enabled: !!athleteId,
+  });
+
+  // EMOM feasibility hook - only for EMOM workouts
+  const {
+    feasibility: emomFeasibility,
+    isLoading: isLoadingEmom,
+  } = useEmomFeasibility(athleteId, workoutId, workout?.workoutType, {
+    enabled: !!athleteId && workout?.workoutType === 'Emom',
   });
 
   // Handle delete success
@@ -190,6 +210,44 @@ export const WorkoutDetailPage: React.FC = () => {
             ) : null}
           </div>
         )}
+
+        {/* Time Estimate Analysis */}
+        <div className="mb-6">
+          {timeEstimateError ? (
+            <Alert variant="info" title="Time Estimate">
+              Time estimates require benchmark data. Add your benchmarks to see personalized time predictions.
+            </Alert>
+          ) : hasEstimateData && timeEstimate ? (
+            <TimeEstimateSummary
+              timeEstimate={timeEstimate}
+              emomFeasibility={emomFeasibility}
+              timeCapSeconds={workout.timeCapSeconds}
+              isLoading={isLoadingTimeEstimate}
+              isLoadingEmom={isLoadingEmom}
+            />
+          ) : isLoadingTimeEstimate ? (
+            <TimeEstimateSummary
+              timeEstimate={{
+                workoutId: workoutId!,
+                workoutName: '',
+                workoutType: workout.workoutType,
+                estimateType: 'Time',
+                minEstimate: 0,
+                maxEstimate: 0,
+                formattedRange: '',
+                confidenceLevel: 'Low',
+                factorsSummary: '',
+                restRecommendations: [],
+                calculatedAt: new Date().toISOString(),
+              }}
+              isLoading={true}
+            />
+          ) : !athleteId ? (
+            <Alert variant="info" title="Time Estimate">
+              Create an athlete profile to see personalized time estimates for this workout.
+            </Alert>
+          ) : null}
+        </div>
 
         {/* Timestamps */}
         <div className="text-xs text-gray-400 border-t border-gray-100 pt-4">
