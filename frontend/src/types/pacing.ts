@@ -4,6 +4,20 @@
 export type PacingLevel = 'Light' | 'Moderate' | 'Heavy';
 
 /**
+ * Pace data for cardio movements (running, rowing, etc.)
+ */
+export interface CardioPace {
+  /** Main pace display string (e.g., "4:35 /km", "2:05 /500m") */
+  displayPrimary: string;
+  /** Secondary pace display (e.g., imperial "7:23 /mi" for running, null for rowing) */
+  displaySecondary: string | null;
+  /** Raw pace value in seconds per unit */
+  valuePerUnit: number;
+  /** Unit label for the pace (e.g., "/km", "/500m", "/mi") */
+  paceUnit: string;
+}
+
+/**
  * Pacing data for a single movement
  */
 export interface MovementPacing {
@@ -21,6 +35,10 @@ export interface MovementPacing {
   recommendedSets: number[];
   /** Benchmark used for calculation (null if none) */
   benchmarkUsed: string | null;
+  /** Whether this is a cardio movement (Run, Row, etc.) */
+  isCardio: boolean;
+  /** Target pace for cardio movements (null for non-cardio) */
+  targetPace: CardioPace | null;
 }
 
 /**

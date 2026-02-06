@@ -51,4 +51,15 @@ public class MovementPacingDto
     /// False indicates default pacing was used.
     /// </summary>
     public bool HasAthleteBenchmark { get; set; }
+
+    /// <summary>
+    /// Whether this is a cardio/monostructural movement with pace-based guidance.
+    /// When true, RecommendedSets will be empty and TargetPace may be populated.
+    /// </summary>
+    public bool IsCardio { get; set; }
+
+    /// <summary>
+    /// Target pace for cardio movements. Null for non-cardio movements.
+    /// </summary>
+    public CardioPaceDto? TargetPace { get; set; }
 }

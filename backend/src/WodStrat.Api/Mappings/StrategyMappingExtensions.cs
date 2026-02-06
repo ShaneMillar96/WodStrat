@@ -1,3 +1,4 @@
+using WodStrat.Api.ViewModels.Pacing;
 using WodStrat.Api.ViewModels.Strategy;
 using WodStrat.Services.Dtos;
 
@@ -84,7 +85,9 @@ public static class StrategyMappingExtensions
             MovementDefinitionId = dto.MovementDefinitionId,
             PacingLevel = dto.PacingLevel,
             GuidanceText = dto.GuidanceText,
-            RecommendedSets = dto.RecommendedSets.Length > 0 ? dto.RecommendedSets : null
+            RecommendedSets = dto.RecommendedSets.Length > 0 ? dto.RecommendedSets : null,
+            IsCardio = dto.IsCardio,
+            TargetPace = dto.TargetPace?.ToResponse()
         };
     }
 

@@ -69,6 +69,8 @@ public class PacingService : IPacingService
                 athleteId,
                 workoutMovement.MovementDefinition,
                 repCount,
+                workoutMovement,
+                workout,
                 cancellationToken);
 
             movementPacingList.Add(movementPacing);
@@ -103,6 +105,8 @@ public class PacingService : IPacingService
             athleteId,
             movementDefinition,
             repCount,
+            null,   // no workout movement context for single-movement endpoint
+            null,   // no workout context
             cancellationToken);
     }
 
@@ -337,6 +341,8 @@ public class PacingService : IPacingService
         int athleteId,
         MovementDefinition movementDefinition,
         int repCount,
+        WorkoutMovement? workoutMovement,
+        Workout? workout,
         CancellationToken cancellationToken)
     {
         // Find the benchmark mapping for this movement, prioritizing mappings where athlete has a benchmark
@@ -348,6 +354,7 @@ public class PacingService : IPacingService
         var hasPopulationData = false;
         var hasAthleteBenchmark = false;
         var benchmarkName = "None";
+        decimal? athleteBenchmarkValue = null;
 
         if (benchmarkMapping != null)
         {
@@ -367,6 +374,7 @@ public class PacingService : IPacingService
 
             hasPopulationData = populationData != null;
             hasAthleteBenchmark = athleteBenchmark != null;
+            athleteBenchmarkValue = athleteBenchmark?.Value;
 
             if (hasPopulationData && hasAthleteBenchmark)
             {
@@ -379,7 +387,23 @@ public class PacingService : IPacingService
             }
         }
 
-        // Calculate set breakdown
+        // Cardio branch: use pace-based guidance instead of set breakdowns
+        if (movementDefinition.Category == MovementCategory.Cardio)
+        {
+            return CalculateCardioPacing(
+                movementDefinition,
+                pacingLevel,
+                percentile,
+                benchmarkName,
+                hasPopulationData,
+                hasAthleteBenchmark,
+                benchmarkMapping,
+                athleteBenchmarkValue,
+                workoutMovement,
+                workout);
+        }
+
+        // Calculate set breakdown (non-cardio path)
         var setBreakdown = CalculateSetBreakdown(repCount, pacingLevel);
 
         // Generate guidance text
@@ -393,6 +417,150 @@ public class PacingService : IPacingService
             benchmarkName,
             hasPopulationData,
             hasAthleteBenchmark);
+    }
+
+    /// <summary>
+    /// Calculates pacing for cardio movements using pace-based logic instead of set breakdowns.
+    /// </summary>
+    private MovementPacingDto CalculateCardioPacing(
+        MovementDefinition movementDefinition,
+        PacingLevel pacingLevel,
+        decimal percentile,
+        string benchmarkName,
+        bool hasPopulationData,
+        bool hasAthleteBenchmark,
+        BenchmarkMovementMapping? benchmarkMapping,
+        decimal? athleteBenchmarkValue,
+        WorkoutMovement? workoutMovement,
+        Workout? workout)
+    {
+        var cardioType = CardioPaceCalculator.DetermineCardioType(movementDefinition.CanonicalName);
+        CardioPaceDto? targetPace = null;
+
+        if (hasAthleteBenchmark && athleteBenchmarkValue.HasValue && benchmarkMapping != null)
+        {
+            var benchmarkSlug = benchmarkMapping.BenchmarkDefinition.Slug;
+
+            if (cardioType == CardioType.Running)
+            {
+                var benchmarkDistance = CardioPaceCalculator.GetBenchmarkDistanceMeters(benchmarkSlug);
+                if (benchmarkDistance.HasValue)
+                {
+                    var (rawSecondsPerKm, rawSecondsPerMile) = CardioPaceCalculator.CalculateRunningPace(
+                        athleteBenchmarkValue.Value, benchmarkDistance.Value);
+
+                    var adjustedSecondsPerKm = CardioPaceCalculator.ApplyContextAdjustment(
+                        rawSecondsPerKm, pacingLevel, workout, workoutMovement);
+                    var adjustedSecondsPerMile = CardioPaceCalculator.ApplyContextAdjustment(
+                        rawSecondsPerMile, pacingLevel, workout, workoutMovement);
+
+                    targetPace = new CardioPaceDto
+                    {
+                        DisplayPrimary = $"{CardioPaceCalculator.FormatPace(adjustedSecondsPerKm)} /km",
+                        DisplaySecondary = $"{CardioPaceCalculator.FormatPace(adjustedSecondsPerMile)} /mi",
+                        ValuePerUnit = adjustedSecondsPerKm,
+                        PaceUnit = "km",
+                        IsDerivedFromBenchmark = true
+                    };
+                }
+            }
+            else if (cardioType == CardioType.Rowing)
+            {
+                var rawSecondsPer500m = CardioPaceCalculator.CalculateRowingPace(
+                    athleteBenchmarkValue.Value, benchmarkMapping.BenchmarkDefinition.Slug);
+
+                var adjustedSecondsPer500m = CardioPaceCalculator.ApplyContextAdjustment(
+                    rawSecondsPer500m, pacingLevel, workout, workoutMovement);
+
+                targetPace = new CardioPaceDto
+                {
+                    DisplayPrimary = $"{CardioPaceCalculator.FormatPace(adjustedSecondsPer500m)} /500m",
+                    DisplaySecondary = null,
+                    ValuePerUnit = adjustedSecondsPer500m,
+                    PaceUnit = "500m",
+                    IsDerivedFromBenchmark = true
+                };
+            }
+            // CardioType.Other: no pace calculation possible, targetPace remains null
+        }
+
+        var guidanceText = GenerateCardioGuidanceText(
+            movementDefinition.DisplayName,
+            pacingLevel,
+            targetPace,
+            workoutMovement,
+            hasAthleteBenchmark);
+
+        return movementDefinition.ToCardioMovementPacingDto(
+            pacingLevel,
+            percentile,
+            guidanceText,
+            benchmarkName,
+            hasPopulationData,
+            hasAthleteBenchmark,
+            targetPace);
+    }
+
+    /// <summary>
+    /// Generates human-readable guidance text for cardio movements.
+    /// </summary>
+    private static string GenerateCardioGuidanceText(
+        string movementName,
+        PacingLevel pacingLevel,
+        CardioPaceDto? targetPace,
+        WorkoutMovement? workoutMovement,
+        bool hasAthleteBenchmark)
+    {
+        // Build distance qualifier from workout movement context
+        var distanceQualifier = BuildDistanceQualifier(workoutMovement);
+        var qualifiedName = string.IsNullOrEmpty(distanceQualifier)
+            ? movementName
+            : $"{distanceQualifier} {movementName}";
+
+        if (targetPace != null)
+        {
+            var paceDisplay = targetPace.DisplaySecondary != null
+                ? $"{targetPace.DisplayPrimary} ({targetPace.DisplaySecondary})"
+                : targetPace.DisplayPrimary;
+
+            var effortDescription = pacingLevel switch
+            {
+                PacingLevel.Heavy => "Push hard - this is a strength.",
+                PacingLevel.Moderate => "Sustainable effort - maintain a steady pace.",
+                PacingLevel.Light => "Conservative pace - protect your energy.",
+                _ => "Maintain a steady pace."
+            };
+
+            return $"Target {paceDisplay} on the {qualifiedName}. {effortDescription}";
+        }
+
+        if (!hasAthleteBenchmark)
+        {
+            return $"Maintain a steady pace on the {qualifiedName}. Record a benchmark to get personalized pace targets.";
+        }
+
+        return $"Maintain a steady pace on the {qualifiedName}.";
+    }
+
+    /// <summary>
+    /// Builds a distance qualifier string from workout movement context (e.g., "400m", "1 Mile").
+    /// </summary>
+    private static string BuildDistanceQualifier(WorkoutMovement? workoutMovement)
+    {
+        if (workoutMovement?.DistanceValue == null)
+            return string.Empty;
+
+        var value = workoutMovement.DistanceValue.Value;
+        var unit = workoutMovement.DistanceUnit;
+
+        return unit switch
+        {
+            DistanceUnit.M => $"{value:0.##}m",
+            DistanceUnit.Km => $"{value:0.##}km",
+            DistanceUnit.Mi => value == 1 ? "1 Mile" : $"{value:0.##} Mile",
+            DistanceUnit.Ft => $"{value:0.##}ft",
+            _ => $"{value:0.##}m"
+        };
     }
 
     /// <summary>

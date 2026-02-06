@@ -132,10 +132,23 @@ export const MovementBreakdownTable: React.FC<MovementBreakdownTableProps> = ({
                       Pacing
                     </div>
                     <p className="text-sm text-gray-700">{row.pacing.guidanceText}</p>
-                    {row.pacing.recommendedSets.length > 0 && (
-                      <p className="text-sm text-primary-700 mt-1">
-                        Recommended sets: {row.pacing.recommendedSets.join('-')}
-                      </p>
+                    {row.pacing.isCardio && row.pacing.targetPace ? (
+                      <div className="flex items-baseline gap-2 mt-1">
+                        <span className="text-sm font-semibold text-primary-700">
+                          {row.pacing.targetPace.displayPrimary}
+                        </span>
+                        {row.pacing.targetPace.displaySecondary && (
+                          <span className="text-xs text-gray-500">
+                            ({row.pacing.targetPace.displaySecondary})
+                          </span>
+                        )}
+                      </div>
+                    ) : (
+                      row.pacing.recommendedSets.length > 0 && (
+                        <p className="text-sm text-primary-700 mt-1">
+                          Recommended sets: {row.pacing.recommendedSets.join('-')}
+                        </p>
+                      )
                     )}
                   </div>
                 )}

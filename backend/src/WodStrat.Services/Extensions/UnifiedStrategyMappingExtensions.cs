@@ -20,7 +20,9 @@ public static class UnifiedStrategyMappingExtensions
                 MovementDefinitionId = m.MovementDefinitionId,
                 PacingLevel = m.PacingLevel,
                 GuidanceText = m.GuidanceText,
-                RecommendedSets = m.RecommendedSets
+                RecommendedSets = m.RecommendedSets,
+                IsCardio = m.IsCardio,
+                TargetPace = m.TargetPace
             })
             .ToList();
 

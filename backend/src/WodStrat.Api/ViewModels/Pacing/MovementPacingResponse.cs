@@ -32,12 +32,14 @@ public class MovementPacingResponse
 
     /// <summary>
     /// Human-readable pacing guidance text.
+    /// For cardio movements, this contains pace-based guidance instead of set-based guidance.
     /// </summary>
     /// <example>Break into sets of 7-7-7. Rest 5-10 seconds between sets.</example>
     public string GuidanceText { get; set; } = string.Empty;
 
     /// <summary>
     /// Suggested rep breakdown for the movement.
+    /// Empty/null for cardio movements where pacing is pace-based.
     /// </summary>
     /// <example>[7, 7, 7]</example>
     public int[]? RecommendedSets { get; set; }
@@ -47,4 +49,17 @@ public class MovementPacingResponse
     /// </summary>
     /// <example>Max Unbroken Pull-Ups</example>
     public string? BenchmarkUsed { get; set; }
+
+    /// <summary>
+    /// Whether this movement is a cardio/monostructural movement (e.g., Run, Row, Bike).
+    /// When true, pacing guidance is pace-based rather than set-based.
+    /// </summary>
+    /// <example>true</example>
+    public bool IsCardio { get; set; }
+
+    /// <summary>
+    /// Target pace information for cardio movements.
+    /// Null for non-cardio movements (strength, gymnastics).
+    /// </summary>
+    public CardioPaceResponse? TargetPace { get; set; }
 }

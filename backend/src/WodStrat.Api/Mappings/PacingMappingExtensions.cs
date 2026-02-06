@@ -36,7 +36,23 @@ public static class PacingMappingExtensions
             AthletePercentile = dto.AthletePercentile,
             GuidanceText = dto.GuidanceText,
             RecommendedSets = dto.RecommendedSets.Length > 0 ? dto.RecommendedSets : null,
-            BenchmarkUsed = string.IsNullOrEmpty(dto.BenchmarkUsed) ? null : dto.BenchmarkUsed
+            BenchmarkUsed = string.IsNullOrEmpty(dto.BenchmarkUsed) ? null : dto.BenchmarkUsed,
+            IsCardio = dto.IsCardio,
+            TargetPace = dto.TargetPace?.ToResponse()
+        };
+    }
+
+    /// <summary>
+    /// Maps CardioPaceDto to CardioPaceResponse.
+    /// </summary>
+    public static CardioPaceResponse ToResponse(this CardioPaceDto dto)
+    {
+        return new CardioPaceResponse
+        {
+            DisplayPrimary = dto.DisplayPrimary,
+            DisplaySecondary = dto.DisplaySecondary,
+            ValuePerUnit = dto.ValuePerUnit,
+            PaceUnit = dto.PaceUnit
         };
     }
 }

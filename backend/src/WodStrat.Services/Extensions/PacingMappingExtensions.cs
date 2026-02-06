@@ -59,6 +59,44 @@ public static class PacingMappingExtensions
     }
 
     /// <summary>
+    /// Creates a MovementPacingDto for cardio movements with pace-based guidance.
+    /// </summary>
+    /// <param name="movement">The movement definition entity.</param>
+    /// <param name="pacingLevel">The calculated pacing level.</param>
+    /// <param name="percentile">The athlete's percentile ranking.</param>
+    /// <param name="guidanceText">The human-readable guidance text.</param>
+    /// <param name="benchmarkName">The name of the benchmark used.</param>
+    /// <param name="hasPopulationData">Whether population data was available.</param>
+    /// <param name="hasAthleteBenchmark">Whether the athlete has recorded the benchmark.</param>
+    /// <param name="targetPace">The target pace data for cardio movements.</param>
+    /// <returns>A new MovementPacingDto instance configured for cardio.</returns>
+    public static MovementPacingDto ToCardioMovementPacingDto(
+        this MovementDefinition movement,
+        PacingLevel pacingLevel,
+        decimal percentile,
+        string guidanceText,
+        string benchmarkName,
+        bool hasPopulationData,
+        bool hasAthleteBenchmark,
+        CardioPaceDto? targetPace)
+    {
+        return new MovementPacingDto
+        {
+            MovementDefinitionId = movement.Id,
+            MovementName = movement.DisplayName,
+            PacingLevel = pacingLevel.ToDisplayString(),
+            AthletePercentile = percentile,
+            GuidanceText = guidanceText,
+            RecommendedSets = Array.Empty<int>(),  // No set breakdowns for cardio
+            BenchmarkUsed = benchmarkName,
+            HasPopulationData = hasPopulationData,
+            HasAthleteBenchmark = hasAthleteBenchmark,
+            IsCardio = true,
+            TargetPace = targetPace
+        };
+    }
+
+    /// <summary>
     /// Creates a WorkoutPacingResultDto from calculation results.
     /// </summary>
     /// <param name="workout">The workout entity.</param>

@@ -96,8 +96,27 @@ const MovementPacingCard: React.FC<MovementPacingCardProps> = ({
             </div>
           )}
 
-          {/* Recommended Sets */}
-          {movement.recommendedSets && movement.recommendedSets.length > 0 && (
+          {/* Target Pace (cardio movements) */}
+          {movement.isCardio && movement.targetPace && (
+            <div>
+              <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
+                Target Pace
+              </div>
+              <div className="flex items-baseline gap-2">
+                <span className="text-lg font-semibold text-gray-900">
+                  {movement.targetPace.displayPrimary}
+                </span>
+                {movement.targetPace.displaySecondary && (
+                  <span className="text-sm text-gray-500">
+                    ({movement.targetPace.displaySecondary})
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Recommended Sets (non-cardio movements) */}
+          {!movement.isCardio && movement.recommendedSets && movement.recommendedSets.length > 0 && (
             <div>
               <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
                 Recommended Sets
