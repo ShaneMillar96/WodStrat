@@ -1,7 +1,7 @@
 import React from 'react';
 import type { RiskAlert, AlertSeverity } from '../../types/strategyInsights';
 import { ALERT_SEVERITY_COLORS } from '../../types/strategyInsights';
-import { SectionSkeleton, SeverityBadge } from '../ui';
+import { SectionSkeleton, SeverityBadge, Badge } from '../ui';
 
 export interface AlertsSectionProps {
   /** Risk alerts */
@@ -50,9 +50,14 @@ export const AlertsSection: React.FC<AlertsSectionProps> = ({
           >
             <div className="flex items-start gap-3">
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
                   <h4 className={`font-medium ${colors.text}`}>{alert.title}</h4>
                   <SeverityBadge severity={alert.severity} size="sm" />
+                  {alert.alertType && (
+                    <Badge variant="gray" size="sm" rounded>
+                      {alert.alertType}
+                    </Badge>
+                  )}
                 </div>
                 <p className={`text-sm ${colors.text}`}>{alert.message}</p>
                 {alert.suggestedAction && (

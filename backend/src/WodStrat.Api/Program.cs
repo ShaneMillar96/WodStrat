@@ -87,6 +87,8 @@ builder.Services.AddScoped<IPacingService, PacingService>();
 builder.Services.AddScoped<IVolumeLoadService, VolumeLoadService>();
 builder.Services.AddScoped<ITimeEstimateService, TimeEstimateService>();
 builder.Services.AddScoped<IStrategyInsightsService, StrategyInsightsService>();
+builder.Services.AddScoped<IMovementContextService, MovementContextService>();
+builder.Services.AddScoped<IUnifiedStrategyService, UnifiedStrategyService>();
 
 // FluentValidation
 builder.Services.AddFluentValidationAutoValidation();

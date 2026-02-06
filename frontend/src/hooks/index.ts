@@ -62,3 +62,6 @@ export type {
   WorkoutStrategyErrors,
   WorkoutStrategyResult
 } from './useWorkoutStrategy';
+
+export { useStrategyTabs } from './useStrategyTabs';
+export type { UseStrategyTabsResult } from './useStrategyTabs';

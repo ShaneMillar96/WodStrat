@@ -168,3 +168,13 @@ export {
   ALERT_SEVERITY_BADGE_VARIANTS,
   ALERT_SEVERITY_COLORS,
 } from './strategyInsights';
+
+// Strategy page types
+export type {
+  StrategyTabId,
+  StrategyTab,
+  MovementAnalysis,
+  QuickMetrics,
+} from './strategyPage';
+
+export { STRATEGY_TABS } from './strategyPage';

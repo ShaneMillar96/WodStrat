@@ -54,3 +54,6 @@ export type { SectionSkeletonProps } from './SectionSkeleton';
 
 export { SectionError } from './SectionError';
 export type { SectionErrorProps } from './SectionError';
+
+export { PercentileIndicator } from './PercentileIndicator';
+export type { PercentileIndicatorProps } from './PercentileIndicator';

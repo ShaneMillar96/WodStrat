@@ -60,7 +60,7 @@ export const StrategyHeader: React.FC<StrategyHeaderProps> = ({
           )}
         </div>
         {confidence && (
-          <div className="flex-shrink-0 text-right">
+          <div className="flex-shrink-0 text-right max-w-[200px]">
             <div className="text-xs text-gray-500 mb-1">Strategy Confidence</div>
             <ConfidenceBadge
               level={confidence.level}
@@ -68,6 +68,11 @@ export const StrategyHeader: React.FC<StrategyHeaderProps> = ({
               showPercentage
               size="lg"
             />
+            {confidence.explanation && (
+              <p className="text-xs text-gray-500 mt-1 line-clamp-2">
+                {confidence.explanation}
+              </p>
+            )}
           </div>
         )}
       </div>

@@ -1,40 +1,109 @@
 import React from 'react';
 import { StrategyHeader } from './StrategyHeader';
-import { MetricsRow } from './MetricsRow';
-import { KeyFocusSection } from './KeyFocusSection';
-import { AlertsSection } from './AlertsSection';
-import { MovementBreakdownTable } from './MovementBreakdownTable';
+import { DifficultyBreakdownChart } from './DifficultyBreakdownChart';
+import { QuickMetricsRow } from './QuickMetricsRow';
+import { StrategyTabContainer } from './StrategyTabContainer';
+import { MissingBenchmarksCTA } from './MissingBenchmarksCTA';
+import { OverviewTab, PacingTab, VolumeTab, TimingTab } from './tabs';
 import { Alert, Button } from '../ui';
 import type { WorkoutStrategyResult } from '../../hooks/useWorkoutStrategy';
 import type { Workout } from '../../types/workout';
+import type { StrategyTabId } from '../../types/strategyPage';
+import type { EmomFeasibility } from '../../types/timeEstimate';
 
 export interface WorkoutStrategyPageProps {
   /** Workout data */
   workout: Workout;
   /** Strategy data from useWorkoutStrategy hook */
   strategy: WorkoutStrategyResult;
+  /** EMOM feasibility data (optional, for EMOM workouts) */
+  emomFeasibility?: EmomFeasibility[];
   /** Callback to go back */
   onBack?: () => void;
+  /** Callback to navigate to add benchmarks page */
+  onAddBenchmarks?: () => void;
   /** Additional CSS classes */
   className?: string;
 }
 
 /**
- * WorkoutStrategyPage - Full workout strategy display
- * Combines all strategy sections into a complete page
+ * WorkoutStrategyPage - Full workout strategy display with tabbed layout
+ *
+ * Features:
+ * - StrategyHeader with workout name, difficulty, and confidence
+ * - DifficultyBreakdownChart showing factor contributions
+ * - QuickMetricsRow with key metrics at a glance
+ * - Tabbed navigation (Overview, Pacing, Volume, Timing)
+ * - MissingBenchmarksCTA when benchmarks are missing
+ * - Conditional rendering based on workout type
  */
 export const WorkoutStrategyPage: React.FC<WorkoutStrategyPageProps> = ({
   workout,
   strategy,
+  emomFeasibility,
   onBack,
+  onAddBenchmarks,
   className = '',
 }) => {
-  const { data, loading, errors } = strategy;
+  const { data, loading } = strategy;
   const workoutName = workout.name || workout.parsedDescription || 'Unnamed Workout';
 
   // Check if we have any data at all
   const hasAnyData = data.insights || data.timeEstimate || data.volumeLoad || data.pacing;
   const allDataMissing = !loading.isAnyLoading && !hasAnyData;
+
+  // Extract additional time estimate fields that may be available
+  const timeEstimateExtended = data.timeEstimate as typeof data.timeEstimate & {
+    benchmarkCoverageCount?: number;
+    totalMovementCount?: number;
+    averagePercentile?: number | null;
+    emomFeasibility?: EmomFeasibility[];
+  };
+
+  // Get EMOM feasibility from props or from time estimate
+  const emomData = emomFeasibility || timeEstimateExtended?.emomFeasibility;
+
+  // Render tab content based on active tab
+  const renderTabContent = (activeTab: StrategyTabId) => {
+    switch (activeTab) {
+      case 'overview':
+        return (
+          <OverviewTab
+            insights={data.insights}
+            pacing={data.pacing}
+            isLoading={loading.isInsightsLoading || loading.isPacingLoading}
+          />
+        );
+      case 'pacing':
+        return (
+          <PacingTab
+            pacing={data.pacing}
+            isLoading={loading.isPacingLoading}
+          />
+        );
+      case 'volume':
+        return (
+          <VolumeTab
+            volumeLoad={data.volumeLoad}
+            isLoading={loading.isVolumeLoadLoading}
+          />
+        );
+      case 'timing':
+        return (
+          <TimingTab
+            timeEstimate={data.timeEstimate}
+            emomFeasibility={emomData}
+            workoutType={workout.workoutType}
+            benchmarkCoverageCount={timeEstimateExtended?.benchmarkCoverageCount}
+            totalMovementCount={timeEstimateExtended?.totalMovementCount}
+            averagePercentile={timeEstimateExtended?.averagePercentile}
+            isLoading={loading.isTimeEstimateLoading}
+          />
+        );
+      default:
+        return null;
+    }
+  };
 
   return (
     <div className={`space-y-6 ${className}`}>
@@ -62,42 +131,38 @@ export const WorkoutStrategyPage: React.FC<WorkoutStrategyPageProps> = ({
         isLoading={loading.isInsightsLoading}
       />
 
-      {/* Time and Volume metrics row */}
-      <MetricsRow
+      {/* Difficulty Breakdown Chart */}
+      {data.insights?.difficultyScore?.breakdown && (
+        <DifficultyBreakdownChart
+          breakdown={data.insights.difficultyScore.breakdown}
+          totalScore={data.insights.difficultyScore.score}
+        />
+      )}
+
+      {/* Quick Metrics Row */}
+      <QuickMetricsRow
         timeEstimate={data.timeEstimate}
         volumeLoad={data.volumeLoad}
-        isTimeEstimateLoading={loading.isTimeEstimateLoading}
-        isVolumeLoadLoading={loading.isVolumeLoadLoading}
-        timeEstimateError={errors.timeEstimateError}
-        volumeLoadError={errors.volumeLoadError}
+        benchmarkCoverageCount={timeEstimateExtended?.benchmarkCoverageCount}
+        totalMovementCount={timeEstimateExtended?.totalMovementCount}
+        averagePercentile={timeEstimateExtended?.averagePercentile}
+        isLoading={loading.isTimeEstimateLoading || loading.isVolumeLoadLoading}
       />
 
-      {/* Key Focus Section */}
-      <KeyFocusSection
-        movements={data.insights?.keyFocusMovements}
-        isLoading={loading.isInsightsLoading}
-      />
+      {/* Tabbed Content Area */}
+      <StrategyTabContainer defaultTab="overview">
+        {renderTabContent}
+      </StrategyTabContainer>
 
-      {/* Alerts Section */}
-      <AlertsSection
-        alerts={data.insights?.riskAlerts}
-        isLoading={loading.isInsightsLoading}
-      />
-
-      {/* Movement Breakdown Table */}
-      <MovementBreakdownTable
-        pacingData={data.pacing?.movementPacing}
-        volumeData={data.volumeLoad?.movementVolumes}
-        isLoading={loading.isPacingLoading || loading.isVolumeLoadLoading}
-      />
-
-      {/* Overall strategy notes */}
-      {data.pacing?.overallStrategyNotes && (
-        <div className="rounded-lg border border-gray-200 bg-white p-5">
-          <h3 className="font-semibold text-gray-900 mb-2">Strategy Notes</h3>
-          <p className="text-gray-700">{data.pacing.overallStrategyNotes}</p>
-        </div>
-      )}
+      {/* Missing Benchmarks CTA */}
+      {data.insights?.strategyConfidence?.missingBenchmarks &&
+        data.insights.strategyConfidence.missingBenchmarks.length > 0 && (
+          <MissingBenchmarksCTA
+            missingBenchmarks={data.insights.strategyConfidence.missingBenchmarks}
+            confidenceLevel={data.insights.strategyConfidence.level}
+            onAddBenchmarks={onAddBenchmarks}
+          />
+        )}
 
       {/* Calculation timestamps */}
       {(data.insights?.calculatedAt || data.timeEstimate?.calculatedAt) && (
