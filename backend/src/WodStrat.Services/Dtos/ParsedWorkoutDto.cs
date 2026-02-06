@@ -52,4 +52,15 @@ public class ParsedWorkoutDto
     /// Indicates if parsing completed successfully without errors.
     /// </summary>
     public bool IsValid => Errors.Count == 0 && Movements.Count > 0;
+
+    /// <summary>
+    /// Workout-level rep scheme reps (e.g., [21, 15, 9] for "21-15-9").
+    /// Applies to all movements unless overridden at movement level.
+    /// </summary>
+    public int[]? RepSchemeReps { get; set; }
+
+    /// <summary>
+    /// Type of workout-level rep scheme (Descending, Ascending, Fixed, Custom).
+    /// </summary>
+    public string? RepSchemeType { get; set; }
 }

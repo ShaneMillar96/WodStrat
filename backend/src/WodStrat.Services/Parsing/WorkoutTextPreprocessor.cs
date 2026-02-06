@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using WodStrat.Dal.Enums;
 
 namespace WodStrat.Services.Parsing;
 
@@ -67,13 +68,35 @@ public static partial class WorkoutTextPreprocessor
             }
         }
 
-        // Step 4: Categorize remaining lines
+        // Step 4: Categorize remaining lines and track rep schemes
         var headerLines = new List<string>();
         var movementLines = new List<string>();
+        RepScheme? pendingRepScheme = null;
+        RepScheme? workoutRepScheme = null;
+        var movementRepSchemes = new Dictionary<int, RepScheme>();
 
         for (var i = startIndex; i < allLines.Count; i++)
         {
             var line = allLines[i];
+
+            // Check if this is a rep scheme line (e.g., "21-15-9" or "21-15-9 reps")
+            var cleanedLine = line.Replace(" reps", "", StringComparison.OrdinalIgnoreCase)
+                                  .Replace(" Reps", "", StringComparison.OrdinalIgnoreCase)
+                                  .Trim();
+            var repSchemeMatch = WorkoutPatterns.ChipperRepSchemePattern().Match(cleanedLine);
+            if (repSchemeMatch.Success)
+            {
+                var extracted = ExtractRepSchemeFromMatch(repSchemeMatch.Groups[1].Value);
+                if (extracted != null)
+                {
+                    pendingRepScheme = extracted;
+                    headerLines.Add(line);
+
+                    // If this is the first rep scheme, it may be workout-level
+                    workoutRepScheme ??= extracted;
+                    continue;
+                }
+            }
 
             if (WorkoutPatterns.IsHeaderLine(line))
             {
@@ -81,8 +104,32 @@ public static partial class WorkoutTextPreprocessor
             }
             else
             {
+                // This is a movement line
+                var movementIndex = movementLines.Count;
                 movementLines.Add(line);
+
+                // If we have a pending rep scheme, assign it to this movement
+                if (pendingRepScheme != null)
+                {
+                    movementRepSchemes[movementIndex] = pendingRepScheme;
+                    pendingRepScheme = null;
+                }
             }
+        }
+
+        // Determine workout-level rep scheme
+        // If no movement-specific schemes, use the first detected rep scheme as workout-level
+        // If all movements have the same rep scheme, treat it as workout-level
+        if (movementRepSchemes.Count > 0 && movementRepSchemes.Values.Distinct().Count() == 1)
+        {
+            // All movements have same rep scheme - treat as workout-level
+            workoutRepScheme = movementRepSchemes.Values.First();
+            movementRepSchemes.Clear();
+        }
+        else if (movementRepSchemes.Count > 0)
+        {
+            // Multiple different rep schemes - clear workout level, keep movement-specific
+            workoutRepScheme = null;
         }
 
         return new PreprocessedWorkoutText
@@ -93,8 +140,61 @@ public static partial class WorkoutTextPreprocessor
             Lines = allLines.Skip(startIndex).ToList(),
             HeaderLines = headerLines,
             MovementLines = movementLines,
+            WorkoutRepScheme = workoutRepScheme,
+            MovementRepSchemes = movementRepSchemes,
             IsEmpty = false
         };
+    }
+
+    /// <summary>
+    /// Extracts a RepScheme from a matched rep scheme string (e.g., "21-15-9").
+    /// </summary>
+    private static RepScheme? ExtractRepSchemeFromMatch(string repSchemeText)
+    {
+        var parts = repSchemeText.Split('-');
+        if (parts.Length < 2) return null;
+
+        var reps = new List<int>();
+        foreach (var part in parts)
+        {
+            if (int.TryParse(part.Trim(), out var rep))
+            {
+                reps.Add(rep);
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        if (reps.Count < 2) return null;
+
+        var type = DetermineRepSchemeType(reps);
+        return new RepScheme(reps, type, repSchemeText);
+    }
+
+    /// <summary>
+    /// Determines the rep scheme type based on the sequence of reps.
+    /// </summary>
+    private static Dal.Enums.RepSchemeType DetermineRepSchemeType(IReadOnlyList<int> reps)
+    {
+        if (reps.Count <= 1) return Dal.Enums.RepSchemeType.Fixed;
+
+        var isDescending = true;
+        var isAscending = true;
+        var isFixed = true;
+
+        for (var i = 1; i < reps.Count; i++)
+        {
+            if (reps[i] >= reps[i - 1]) isDescending = false;
+            if (reps[i] <= reps[i - 1]) isAscending = false;
+            if (reps[i] != reps[0]) isFixed = false;
+        }
+
+        if (isFixed) return Dal.Enums.RepSchemeType.Fixed;
+        if (isDescending) return Dal.Enums.RepSchemeType.Descending;
+        if (isAscending) return Dal.Enums.RepSchemeType.Ascending;
+        return Dal.Enums.RepSchemeType.Custom;
     }
 
     /// <summary>

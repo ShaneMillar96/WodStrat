@@ -39,4 +39,16 @@ public sealed class PreprocessedWorkoutText
     /// Whether the input was empty or whitespace-only.
     /// </summary>
     public bool IsEmpty { get; init; }
+
+    /// <summary>
+    /// Workout-level rep scheme (applies to all movements unless overridden).
+    /// </summary>
+    public RepScheme? WorkoutRepScheme { get; init; }
+
+    /// <summary>
+    /// Movement-specific rep scheme assignments (for complex cases).
+    /// Key = index in MovementLines list.
+    /// </summary>
+    public IReadOnlyDictionary<int, RepScheme> MovementRepSchemes { get; init; }
+        = new Dictionary<int, RepScheme>();
 }

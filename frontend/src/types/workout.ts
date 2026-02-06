@@ -54,6 +54,8 @@ export interface ParsedMovement {
   durationSeconds: number | null;
   durationFormatted: string | null;
   notes: string | null;
+  repSchemeReps: number[] | null;
+  repSchemeType: string | null;
 }
 
 /**
@@ -71,6 +73,8 @@ export interface ParsedWorkout {
   movements: ParsedMovement[];
   errors: ParsingError[];
   isValid: boolean;
+  repSchemeReps: number[] | null;
+  repSchemeType: string | null;
 }
 
 /**

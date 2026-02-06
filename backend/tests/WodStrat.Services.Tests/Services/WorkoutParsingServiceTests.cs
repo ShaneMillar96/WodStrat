@@ -756,4 +756,149 @@ Unknown movement here
     }
 
     #endregion
+
+    #region Rep Scheme Tests
+
+    [Fact]
+    public async Task ParseWorkoutTextAsync_SimpleRepScheme_AppliedToAllMovements()
+    {
+        // Arrange
+        var workoutText = "21-15-9\nthrusters\npull-ups";
+
+        // Act
+        var result = await _sut.ParseWorkoutTextAsync(workoutText);
+
+        // Assert
+        result.Movements.Should().HaveCount(2);
+        result.Movements[0].RepSchemeReps.Should().BeEquivalentTo(new[] { 21, 15, 9 });
+        result.Movements[0].RepSchemeType.Should().Be("Descending");
+        result.Movements[1].RepSchemeReps.Should().BeEquivalentTo(new[] { 21, 15, 9 });
+        result.Movements[1].RepSchemeType.Should().Be("Descending");
+        result.RepSchemeReps.Should().BeEquivalentTo(new[] { 21, 15, 9 });
+        result.RepSchemeType.Should().Be("Descending");
+    }
+
+    [Fact]
+    public async Task ParseWorkoutTextAsync_RepSchemeWithRepsSuffix_Parsed()
+    {
+        // Arrange
+        var workoutText = "21-15-9 reps\nThrusters\nPull-ups";
+
+        // Act
+        var result = await _sut.ParseWorkoutTextAsync(workoutText);
+
+        // Assert
+        result.Movements.Should().HaveCount(2);
+        result.Movements[0].RepSchemeReps.Should().BeEquivalentTo(new[] { 21, 15, 9 });
+        result.Movements[1].RepSchemeReps.Should().BeEquivalentTo(new[] { 21, 15, 9 });
+        result.RepSchemeReps.Should().BeEquivalentTo(new[] { 21, 15, 9 });
+    }
+
+    [Fact]
+    public async Task ParseWorkoutTextAsync_ExplicitReps_NotOverriddenByRepScheme()
+    {
+        // Arrange
+        var workoutText = "21-15-9\n10 Burpees\nThrusters";
+
+        // Act
+        var result = await _sut.ParseWorkoutTextAsync(workoutText);
+
+        // Assert
+        result.Movements.Should().HaveCount(2);
+        result.Movements[0].RepCount.Should().Be(10);
+        result.Movements[0].RepSchemeReps.Should().BeNull(); // Explicit reps take precedence
+        result.Movements[1].RepSchemeReps.Should().BeEquivalentTo(new[] { 21, 15, 9 });
+    }
+
+    [Fact]
+    public async Task ParseWorkoutTextAsync_ComplexMultipleRepSchemes_EachMovementGetsOwn()
+    {
+        // Arrange
+        var workoutText = @"For time:
+30-24-18
+Burpees
+36-30-24
+Pull-ups
+15-12-9
+Thrusters";
+
+        // Act
+        var result = await _sut.ParseWorkoutTextAsync(workoutText);
+
+        // Assert
+        result.Movements.Should().HaveCount(3);
+        result.Movements[0].RepSchemeReps.Should().BeEquivalentTo(new[] { 30, 24, 18 });
+        result.Movements[1].RepSchemeReps.Should().BeEquivalentTo(new[] { 36, 30, 24 });
+        result.Movements[2].RepSchemeReps.Should().BeEquivalentTo(new[] { 15, 12, 9 });
+        // Workout-level rep scheme should be null when movements have different schemes
+        result.RepSchemeReps.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task ParseWorkoutTextAsync_AscendingRepScheme_DetectsTypeCorrectly()
+    {
+        // Arrange
+        var workoutText = "9-15-21\nPull-ups";
+
+        // Act
+        var result = await _sut.ParseWorkoutTextAsync(workoutText);
+
+        // Assert
+        result.Movements.Should().HaveCount(1);
+        result.Movements[0].RepSchemeReps.Should().BeEquivalentTo(new[] { 9, 15, 21 });
+        result.Movements[0].RepSchemeType.Should().Be("Ascending");
+        result.RepSchemeType.Should().Be("Ascending");
+    }
+
+    [Fact]
+    public async Task ParseWorkoutTextAsync_CustomRepScheme_DetectsTypeCorrectly()
+    {
+        // Arrange - Rep scheme that isn't strictly ascending or descending
+        var workoutText = "10-15-10\nBurpees";
+
+        // Act
+        var result = await _sut.ParseWorkoutTextAsync(workoutText);
+
+        // Assert
+        result.Movements.Should().HaveCount(1);
+        result.Movements[0].RepSchemeReps.Should().BeEquivalentTo(new[] { 10, 15, 10 });
+        result.Movements[0].RepSchemeType.Should().Be("Custom");
+    }
+
+    [Fact]
+    public async Task ParseWorkoutTextAsync_FixedRepScheme_DetectsTypeCorrectly()
+    {
+        // Arrange
+        var workoutText = "10-10-10\nPull-ups";
+
+        // Act
+        var result = await _sut.ParseWorkoutTextAsync(workoutText);
+
+        // Assert
+        result.Movements.Should().HaveCount(1);
+        result.Movements[0].RepSchemeReps.Should().BeEquivalentTo(new[] { 10, 10, 10 });
+        result.Movements[0].RepSchemeType.Should().Be("Fixed");
+    }
+
+    [Fact]
+    public async Task ParseWorkoutTextAsync_Fran_RepSchemeAppliedCorrectly()
+    {
+        // Arrange - Classic Fran workout
+        var workoutText = @"For Time:
+21-15-9
+Thrusters
+Pull-ups";
+
+        // Act
+        var result = await _sut.ParseWorkoutTextAsync(workoutText);
+
+        // Assert
+        result.WorkoutType.Should().Be(WorkoutType.ForTime);
+        result.RepSchemeReps.Should().BeEquivalentTo(new[] { 21, 15, 9 });
+        result.Movements.Should().HaveCount(2);
+        result.Movements[0].RepSchemeReps.Should().BeEquivalentTo(new[] { 21, 15, 9 });
+        result.Movements[1].RepSchemeReps.Should().BeEquivalentTo(new[] { 21, 15, 9 });
+    }
+
+    #endregion
 }

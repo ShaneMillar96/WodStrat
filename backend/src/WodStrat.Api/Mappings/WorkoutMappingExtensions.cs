@@ -27,7 +27,9 @@ public static class WorkoutMappingExtensions
             RoundCount = dto.RoundCount,
             IntervalDurationSeconds = dto.IntervalDurationSeconds,
             IntervalDurationFormatted = FormatSeconds(dto.IntervalDurationSeconds),
-            Movements = dto.Movements.Select(m => m.ToResponse()).ToList()
+            Movements = dto.Movements.Select(m => m.ToResponse()).ToList(),
+            RepSchemeReps = dto.RepSchemeReps,
+            RepSchemeType = dto.RepSchemeType
         };
     }
 
@@ -66,7 +68,9 @@ public static class WorkoutMappingExtensions
             CaloriesFemale = dto.CaloriesFemale,
             DurationSeconds = dto.DurationSeconds,
             DurationFormatted = FormatSeconds(dto.DurationSeconds),
-            Notes = dto.Notes
+            Notes = dto.Notes,
+            RepSchemeReps = dto.RepSchemeReps,
+            RepSchemeType = dto.RepSchemeType
         };
     }
 

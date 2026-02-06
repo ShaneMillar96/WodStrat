@@ -113,6 +113,9 @@ public class WorkoutParsingService : IWorkoutParsingService
             .Select(r => r.Movement!)
             .ToList();
 
+        // Apply rep schemes to movements that don't have explicit reps
+        ApplyRepSchemes(movements, preprocessed, typeDetection);
+
         var errors = movementResults
             .Where(r => r.Error != null)
             .Select(r => r.Error!)
@@ -123,6 +126,18 @@ public class WorkoutParsingService : IWorkoutParsingService
             errors.Insert(0, typeDetection.Error);
         }
 
+        // Determine the effective workout-level rep scheme
+        // Only use workout-level rep scheme if there are no movement-specific schemes
+        RepScheme? effectiveRepScheme = null;
+        if (preprocessed.MovementRepSchemes.Count == 0)
+        {
+            effectiveRepScheme = preprocessed.WorkoutRepScheme ?? typeDetection.RepScheme;
+        }
+        else
+        {
+            effectiveRepScheme = preprocessed.WorkoutRepScheme;
+        }
+
         var workout = new ParsedWorkoutDto
         {
             OriginalText = originalText,
@@ -131,13 +146,51 @@ public class WorkoutParsingService : IWorkoutParsingService
             RoundCount = typeDetection.RoundCount,
             IntervalDurationSeconds = typeDetection.IntervalSeconds,
             Movements = movements,
-            Errors = errors
+            Errors = errors,
+            RepSchemeReps = effectiveRepScheme?.Reps.ToArray(),
+            RepSchemeType = effectiveRepScheme?.Type.ToString()
         };
 
         // Generate description
         workout.ParsedDescription = GenerateDescription(workout, preprocessed.WorkoutName);
 
         return workout;
+    }
+
+    /// <summary>
+    /// Applies rep schemes to movements that don't have explicit rep counts.
+    /// </summary>
+    private static void ApplyRepSchemes(
+        List<ParsedMovementDto> movements,
+        PreprocessedWorkoutText preprocessed,
+        WorkoutTypeDetectionResult typeDetection)
+    {
+        // Get the workout-level rep scheme as fallback
+        var workoutRepScheme = preprocessed.WorkoutRepScheme ?? typeDetection.RepScheme;
+
+        for (int i = 0; i < movements.Count; i++)
+        {
+            var movement = movements[i];
+
+            // Skip if movement already has explicit rep count
+            if (movement.RepCount.HasValue)
+                continue;
+
+            // Check for movement-specific rep scheme first (complex case)
+            if (preprocessed.MovementRepSchemes.TryGetValue(i, out var specificScheme))
+            {
+                movement.RepSchemeReps = specificScheme.Reps.ToArray();
+                movement.RepSchemeType = specificScheme.Type.ToString();
+                continue;
+            }
+
+            // Fall back to workout-level rep scheme (simple case)
+            if (workoutRepScheme != null)
+            {
+                movement.RepSchemeReps = workoutRepScheme.Reps.ToArray();
+                movement.RepSchemeType = workoutRepScheme.Type.ToString();
+            }
+        }
     }
 
     /// <summary>

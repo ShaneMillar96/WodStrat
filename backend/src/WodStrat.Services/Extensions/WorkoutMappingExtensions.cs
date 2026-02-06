@@ -177,7 +177,7 @@ public static class WorkoutMappingExtensions
                 {
                     MovementDefinitionId = m.MovementDefinitionId!.Value,
                     SequenceOrder = m.SequenceOrder,
-                    RepCount = m.RepCount,
+                    RepCount = m.RepCount ?? m.RepSchemeReps?.Sum(),
                     LoadValue = m.LoadValue,
                     LoadUnit = m.LoadUnit,
                     DistanceValue = m.DistanceValue,

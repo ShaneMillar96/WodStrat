@@ -87,4 +87,15 @@ public class ParsedMovementDto
     /// Additional notes or specifications.
     /// </summary>
     public string? Notes { get; set; }
+
+    /// <summary>
+    /// Rep scheme reps for this movement (e.g., [21, 15, 9] for "21-15-9").
+    /// Applied when movement has no explicit rep count but workout has a rep scheme.
+    /// </summary>
+    public int[]? RepSchemeReps { get; set; }
+
+    /// <summary>
+    /// Type of rep scheme (Descending, Ascending, Fixed, Custom).
+    /// </summary>
+    public string? RepSchemeType { get; set; }
 }

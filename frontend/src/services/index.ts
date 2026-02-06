@@ -6,3 +6,5 @@ export { workoutService } from './workoutService';
 export { movementService } from './movementService';
 export { volumeLoadService } from './volumeLoadService';
 export { timeEstimateService } from './timeEstimateService';
+export { pacingService } from './pacingService';
+export { strategyInsightsService } from './strategyInsightsService';

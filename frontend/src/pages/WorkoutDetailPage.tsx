@@ -5,13 +5,9 @@ import {
   MovementList,
   WorkoutTypeTag,
   WorkoutMetadata,
-  VolumeLoadSummary,
-  TimeEstimateSummary,
 } from '../components/workouts';
 import { useWorkout } from '../hooks/useWorkout';
 import { useWorkoutMutations } from '../hooks/useWorkouts';
-import { useWorkoutVolumeLoad } from '../hooks/useVolumeLoad';
-import { useTimeEstimate, useEmomFeasibility } from '../hooks/useTimeEstimate';
 import { useAthleteContext } from '../contexts/AthleteContext';
 import { ApiException } from '../services';
 
@@ -38,37 +34,6 @@ export const WorkoutDetailPage: React.FC = () => {
   const { workout, isLoading, error: queryError } = useWorkout(workoutId);
   const { deleteWorkout, isDeleting, deleteSuccess, error: mutationError } = useWorkoutMutations();
   const { athleteId } = useAthleteContext();
-
-  // Check if workout has weighted movements
-  const hasWeightedMovements = workout?.movements.some(m => m.loadValue !== null) ?? false;
-
-  // Volume load hook - only enabled when we have an athlete and weighted movements
-  const {
-    volumeLoad,
-    isLoading: isLoadingVolumeLoad,
-    error: volumeLoadError,
-    hasVolumeData,
-  } = useWorkoutVolumeLoad(athleteId, workoutId, {
-    enabled: hasWeightedMovements && !!athleteId,
-  });
-
-  // Time estimate hook - enabled when we have an athlete
-  const {
-    timeEstimate,
-    isLoading: isLoadingTimeEstimate,
-    error: timeEstimateError,
-    hasEstimateData,
-  } = useTimeEstimate(athleteId, workoutId, {
-    enabled: !!athleteId,
-  });
-
-  // EMOM feasibility hook - only for EMOM workouts
-  const {
-    feasibility: emomFeasibility,
-    isLoading: isLoadingEmom,
-  } = useEmomFeasibility(athleteId, workoutId, workout?.workoutType, {
-    enabled: !!athleteId && workout?.workoutType === 'Emom',
-  });
 
   // Handle delete success
   useEffect(() => {
@@ -178,77 +143,6 @@ export const WorkoutDetailPage: React.FC = () => {
           <MovementList movements={workout.movements} showErrors={false} />
         </div>
 
-        {/* Volume Load Analysis */}
-        {hasWeightedMovements && (
-          <div className="mb-6">
-            {volumeLoadError ? (
-              <Alert variant="info" title="Volume Load Analysis">
-                Volume load analysis requires benchmark data. Add your strength benchmarks to see personalized load analysis.
-              </Alert>
-            ) : hasVolumeData && volumeLoad ? (
-              <VolumeLoadSummary
-                volumeLoad={volumeLoad}
-                isLoading={isLoadingVolumeLoad}
-              />
-            ) : isLoadingVolumeLoad ? (
-              <VolumeLoadSummary
-                volumeLoad={{
-                  workoutId: workoutId!,
-                  workoutName: '',
-                  movementVolumes: [],
-                  totalVolumeLoad: 0,
-                  totalVolumeLoadFormatted: '',
-                  overallAssessment: '',
-                  calculatedAt: new Date().toISOString(),
-                }}
-                isLoading={true}
-              />
-            ) : !athleteId ? (
-              <Alert variant="info" title="Volume Load Analysis">
-                Create an athlete profile to see personalized volume load analysis for this workout.
-              </Alert>
-            ) : null}
-          </div>
-        )}
-
-        {/* Time Estimate Analysis */}
-        <div className="mb-6">
-          {timeEstimateError ? (
-            <Alert variant="info" title="Time Estimate">
-              Time estimates require benchmark data. Add your benchmarks to see personalized time predictions.
-            </Alert>
-          ) : hasEstimateData && timeEstimate ? (
-            <TimeEstimateSummary
-              timeEstimate={timeEstimate}
-              emomFeasibility={emomFeasibility}
-              timeCapSeconds={workout.timeCapSeconds}
-              isLoading={isLoadingTimeEstimate}
-              isLoadingEmom={isLoadingEmom}
-            />
-          ) : isLoadingTimeEstimate ? (
-            <TimeEstimateSummary
-              timeEstimate={{
-                workoutId: workoutId!,
-                workoutName: '',
-                workoutType: workout.workoutType,
-                estimateType: 'Time',
-                minEstimate: 0,
-                maxEstimate: 0,
-                formattedRange: '',
-                confidenceLevel: 'Low',
-                factorsSummary: '',
-                restRecommendations: [],
-                calculatedAt: new Date().toISOString(),
-              }}
-              isLoading={true}
-            />
-          ) : !athleteId ? (
-            <Alert variant="info" title="Time Estimate">
-              Create an athlete profile to see personalized time estimates for this workout.
-            </Alert>
-          ) : null}
-        </div>
-
         {/* Timestamps */}
         <div className="text-xs text-gray-400 border-t border-gray-100 pt-4">
           <p>Created: {new Date(workout.createdAt).toLocaleString()}</p>
@@ -257,6 +151,11 @@ export const WorkoutDetailPage: React.FC = () => {
 
         {/* Actions */}
         <div className="mt-6 flex justify-end gap-3 border-t border-gray-200 pt-4">
+          {athleteId && (
+            <Link to={`/workouts/${workout.id}/strategy`}>
+              <Button variant="primary">View Strategy</Button>
+            </Link>
+          )}
           <Link to={`/workouts/${workout.id}/edit`}>
             <Button variant="outline">Edit</Button>
           </Link>

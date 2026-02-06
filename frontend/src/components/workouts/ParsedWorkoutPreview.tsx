@@ -81,6 +81,11 @@ export const ParsedWorkoutPreview: React.FC<ParsedWorkoutPreviewProps> = ({
 const ParsedMovementRow: React.FC<{ movement: ParsedMovement }> = ({ movement }) => {
   const hasError = !movement.movementDefinitionId;
 
+  // Format rep display - prefer repCount, fall back to repSchemeReps pattern (e.g., "21-15-9")
+  const repDisplay = movement.repCount
+    ? movement.repCount.toString()
+    : movement.repSchemeReps?.join('-') || null;
+
   return (
     <div className={`p-3 ${hasError ? 'bg-red-50' : 'bg-white'}`}>
       <div className="flex items-center justify-between">
@@ -88,8 +93,8 @@ const ParsedMovementRow: React.FC<{ movement: ParsedMovement }> = ({ movement })
           <span className="text-sm text-gray-400 w-6">{movement.sequenceOrder}.</span>
           <div>
             <div className="flex items-center gap-2">
-              {movement.repCount && (
-                <span className="font-medium">{movement.repCount}</span>
+              {repDisplay && (
+                <span className="font-medium">{repDisplay}</span>
               )}
               <span className={hasError ? 'text-red-700' : 'text-gray-900'}>
                 {movement.movementName || movement.originalText}

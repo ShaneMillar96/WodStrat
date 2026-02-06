@@ -50,3 +50,15 @@ export {
 export { useWorkoutVolumeLoad } from './useVolumeLoad';
 
 export { useTimeEstimate, useEmomFeasibility } from './useTimeEstimate';
+
+export { usePacing } from './usePacing';
+
+export { useStrategyInsights } from './useStrategyInsights';
+
+export { useWorkoutStrategy } from './useWorkoutStrategy';
+export type {
+  WorkoutStrategyData,
+  WorkoutStrategyLoadingState,
+  WorkoutStrategyErrors,
+  WorkoutStrategyResult
+} from './useWorkoutStrategy';

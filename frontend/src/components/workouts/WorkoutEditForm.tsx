@@ -68,7 +68,7 @@ export const WorkoutEditForm: React.FC<WorkoutEditFormProps> = ({
     .map(m => ({
       movementDefinitionId: m.movementDefinitionId!,
       sequenceOrder: m.sequenceOrder,
-      repCount: m.repCount,
+      repCount: m.repCount ?? (m.repSchemeReps?.reduce((sum, r) => sum + r, 0) || null),
       loadValue: m.loadValue,
       loadUnit: m.loadUnit,
       distanceValue: m.distanceValue,

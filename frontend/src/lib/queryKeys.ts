@@ -82,4 +82,22 @@ export const queryKeys = {
     emomFeasibility: (athleteId: number, workoutId: number) =>
       [...queryKeys.timeEstimate.all, 'emom', athleteId, workoutId] as const,
   },
+
+  /**
+   * All pacing-related queries
+   */
+  pacing: {
+    all: ['pacing'] as const,
+    workout: (athleteId: number, workoutId: number) =>
+      [...queryKeys.pacing.all, 'workout', athleteId, workoutId] as const,
+  },
+
+  /**
+   * All strategy insights-related queries
+   */
+  strategyInsights: {
+    all: ['strategyInsights'] as const,
+    workout: (athleteId: number, workoutId: number) =>
+      [...queryKeys.strategyInsights.all, 'workout', athleteId, workoutId] as const,
+  },
 };

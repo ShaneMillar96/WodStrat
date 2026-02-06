@@ -43,6 +43,28 @@ export function getConfidenceLevel(score: number): 'high' | 'medium' | 'low' {
 }
 
 /**
+ * Determine rep scheme type from array of reps
+ * @param reps - Array of rep counts
+ * @returns The type of rep scheme
+ */
+function determineRepSchemeType(reps: number[]): RepSchemeType {
+  // All same (fixed)
+  if (reps.every(r => r === reps[0])) {
+    return 'fixed';
+  }
+  // Descending (21-15-9)
+  if (reps.every((r, i) => i === 0 || r < reps[i - 1])) {
+    return 'descending';
+  }
+  // Ascending (9-15-21)
+  if (reps.every((r, i) => i === 0 || r > reps[i - 1])) {
+    return 'ascending';
+  }
+  // Custom pattern
+  return 'custom';
+}
+
+/**
  * Detect rep scheme from movements
  * @param movements - Array of parsed movements
  * @param _roundCount - Number of rounds (if any) - reserved for future use
@@ -52,32 +74,24 @@ export function detectRepScheme(
   movements: ParsedMovement[],
   _roundCount: number | null
 ): RepScheme | null {
-  // Collect rep counts from movements
+  // First, check if movements have repSchemeReps from the backend
+  // Use the first movement's repSchemeReps as the workout-level scheme
+  const movementWithScheme = movements.find(m => m.repSchemeReps && m.repSchemeReps.length > 0);
+  if (movementWithScheme && movementWithScheme.repSchemeReps) {
+    const reps = movementWithScheme.repSchemeReps;
+    const type = determineRepSchemeType(reps);
+    return { type, reps };
+  }
+
+  // Fallback: Collect rep counts from movements (for workouts without backend rep scheme)
   const reps = movements
     .map(m => m.repCount)
     .filter((r): r is number => r !== null);
 
   if (reps.length === 0) return null;
 
-  // Check if all same (fixed)
-  if (reps.every(r => r === reps[0])) {
-    return { type: 'fixed', reps };
-  }
-
-  // Check for descending (21-15-9)
-  const isDescending = reps.every((r, i) => i === 0 || r < reps[i - 1]);
-  if (isDescending) {
-    return { type: 'descending', reps };
-  }
-
-  // Check for ascending (9-15-21)
-  const isAscending = reps.every((r, i) => i === 0 || r > reps[i - 1]);
-  if (isAscending) {
-    return { type: 'ascending', reps };
-  }
-
-  // Custom pattern
-  return { type: 'custom', reps };
+  const type = determineRepSchemeType(reps);
+  return { type, reps };
 }
 
 /**

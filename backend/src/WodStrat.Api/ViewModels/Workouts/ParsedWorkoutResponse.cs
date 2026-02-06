@@ -63,4 +63,17 @@ public class ParsedWorkoutResponse
     /// </summary>
     /// <example>0.85</example>
     public decimal? ParseConfidence { get; set; }
+
+    /// <summary>
+    /// Workout-level rep scheme reps (e.g., [21, 15, 9] for "21-15-9").
+    /// Applies to all movements unless overridden at movement level.
+    /// </summary>
+    /// <example>[21, 15, 9]</example>
+    public int[]? RepSchemeReps { get; set; }
+
+    /// <summary>
+    /// Type of workout-level rep scheme (Descending, Ascending, Fixed, Custom).
+    /// </summary>
+    /// <example>Descending</example>
+    public string? RepSchemeType { get; set; }
 }

@@ -136,3 +136,35 @@ export {
   CONFIDENCE_LEVEL_COLORS,
   EMOM_FEASIBILITY_COLORS,
 } from './timeEstimate';
+
+// Pacing types
+export type {
+  PacingLevel,
+  MovementPacing,
+  WorkoutPacingResult,
+} from './pacing';
+
+export {
+  PACING_LEVEL_BADGE_VARIANTS,
+  PACING_LEVEL_LABELS,
+  PACING_LEVEL_COLORS,
+} from './pacing';
+
+// Strategy insights types
+export type {
+  DifficultyLabel,
+  StrategyConfidenceLevel,
+  AlertSeverity,
+  DifficultyBreakdown,
+  DifficultyScore,
+  StrategyConfidence,
+  KeyFocusMovement,
+  RiskAlert,
+  StrategyInsightsResult,
+} from './strategyInsights';
+
+export {
+  DIFFICULTY_LABEL_BADGE_VARIANTS,
+  ALERT_SEVERITY_BADGE_VARIANTS,
+  ALERT_SEVERITY_COLORS,
+} from './strategyInsights';

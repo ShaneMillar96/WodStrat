@@ -59,12 +59,16 @@ export const MovementCard: React.FC<MovementCardProps> = ({
           {/* Movement details */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              {/* Rep count */}
-              {movement.repCount !== null && (
+              {/* Rep count or rep scheme pattern */}
+              {movement.repCount !== null ? (
                 <span className="font-semibold text-gray-900">
                   {movement.repCount}
                 </span>
-              )}
+              ) : repScheme && repScheme.length > 0 ? (
+                <span className="font-semibold text-gray-900">
+                  {repScheme.join('-')}
+                </span>
+              ) : null}
 
               {/* Movement name */}
               <span className={`font-medium ${showError && hasError ? 'text-red-700' : 'text-gray-900'}`}>
@@ -79,8 +83,8 @@ export const MovementCard: React.FC<MovementCardProps> = ({
               )}
             </div>
 
-            {/* Rep scheme pattern if provided */}
-            {repScheme && repScheme.length > 1 && (
+            {/* Rep scheme pattern - only show when we displayed repCount above (so pattern adds context) */}
+            {repScheme && repScheme.length > 1 && movement.repCount !== null && (
               <div className="text-xs text-gray-500 mt-0.5">
                 {repScheme.join('-')} reps
               </div>
