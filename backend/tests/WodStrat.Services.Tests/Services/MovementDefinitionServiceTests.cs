@@ -728,6 +728,124 @@ public class MovementDefinitionServiceTests
 
     #endregion
 
+    #region NormalizeMovementNameAsync - Distance Prefixed Tests (WOD-33)
+
+    [Theory]
+    [InlineData("400m run", "run")]
+    [InlineData("800m run", "run")]
+    [InlineData("1 mile run", "run")]
+    [InlineData("1.5 mile run", "run")]
+    [InlineData("5k run", "run")]
+    [InlineData("400 meter run", "run")]
+    [InlineData("400 meters run", "run")]
+    public async Task NormalizeMovementNameAsync_DistancePrefixedRun_ReturnsRunCanonicalName(
+        string input, string expectedCanonical)
+    {
+        // Arrange
+        var movement = CreateMovementDefinition(expectedCanonical, "Run", MovementCategory.Cardio, true);
+        var queryable = new[] { movement }.AsQueryable().BuildMock();
+        _database.Get<MovementDefinition>().Returns(queryable);
+
+        // Act
+        var result = await _sut.NormalizeMovementNameAsync(input);
+
+        // Assert
+        result.Should().Be(expectedCanonical);
+    }
+
+    [Theory]
+    [InlineData("800m row", "row")]
+    [InlineData("1000m row", "row")]
+    [InlineData("2k row", "row")]
+    [InlineData("500 meter row", "row")]
+    public async Task NormalizeMovementNameAsync_DistancePrefixedRow_ReturnsRowCanonicalName(
+        string input, string expectedCanonical)
+    {
+        // Arrange
+        var movement = CreateMovementDefinition(expectedCanonical, "Row", MovementCategory.Cardio, true);
+        var queryable = new[] { movement }.AsQueryable().BuildMock();
+        _database.Get<MovementDefinition>().Returns(queryable);
+
+        // Act
+        var result = await _sut.NormalizeMovementNameAsync(input);
+
+        // Assert
+        result.Should().Be(expectedCanonical);
+    }
+
+    [Fact]
+    public async Task NormalizeMovementNameAsync_DirectAlias_StillWorks()
+    {
+        // Arrange - Ensure existing behavior is preserved (no regression)
+        var movement = CreateMovementDefinition("run", "Run", MovementCategory.Cardio, true);
+        movement.Aliases = new List<MovementAlias>
+        {
+            new() { Id = 1, Alias = "running", MovementDefinitionId = movement.Id }
+        };
+        var queryable = new[] { movement }.AsQueryable().BuildMock();
+        _database.Get<MovementDefinition>().Returns(queryable);
+
+        // Act
+        var result = await _sut.NormalizeMovementNameAsync("running");
+
+        // Assert
+        result.Should().Be("run");
+    }
+
+    [Fact]
+    public async Task NormalizeMovementNameAsync_DirectCanonicalName_StillWorks()
+    {
+        // Arrange - Ensure direct canonical name lookup still works
+        var movement = CreateMovementDefinition("run", "Run", MovementCategory.Cardio, true);
+        var queryable = new[] { movement }.AsQueryable().BuildMock();
+        _database.Get<MovementDefinition>().Returns(queryable);
+
+        // Act
+        var result = await _sut.NormalizeMovementNameAsync("run");
+
+        // Assert
+        result.Should().Be("run");
+    }
+
+    [Fact]
+    public async Task NormalizeMovementNameAsync_DistancePrefixedWithNoMatch_ReturnsNull()
+    {
+        // Arrange - Distance-prefixed input for a movement not in the database
+        var queryable = Array.Empty<MovementDefinition>().AsQueryable().BuildMock();
+        _database.Get<MovementDefinition>().Returns(queryable);
+
+        // Act
+        var result = await _sut.NormalizeMovementNameAsync("400m swim");
+
+        // Assert
+        result.Should().BeNull();
+    }
+
+    [Theory]
+    [InlineData("50ft bear crawl", "bear crawl")]
+    [InlineData("100 feet lunges", "lunges")]
+    public async Task NormalizeMovementNameAsync_FeetDistancePrefixed_ReturnsCanonicalName(
+        string input, string expectedCanonical)
+    {
+        // Arrange
+        var movement = CreateMovementDefinition(expectedCanonical.Replace(" ", "_"), expectedCanonical, MovementCategory.Cardio, true);
+        // Also add the canonical name with spaces as an alias for the test to work
+        movement.Aliases = new List<MovementAlias>
+        {
+            new() { Id = 1, Alias = expectedCanonical, MovementDefinitionId = movement.Id }
+        };
+        var queryable = new[] { movement }.AsQueryable().BuildMock();
+        _database.Get<MovementDefinition>().Returns(queryable);
+
+        // Act
+        var result = await _sut.NormalizeMovementNameAsync(input);
+
+        // Assert
+        result.Should().Be(expectedCanonical.Replace(" ", "_"));
+    }
+
+    #endregion
+
     #region SearchMovementsAsync Tests (WOD-12)
 
     [Fact]

@@ -105,6 +105,10 @@ public class MovementDefinitionService : IMovementDefinitionService
     #region New Methods (WOD-12)
 
     /// <inheritdoc />
+    /// <summary>
+    /// Normalizes a movement name/alias to its canonical form.
+    /// Handles distance-prefixed movements (e.g., "400m run" -> "run").
+    /// </summary>
     public async Task<string?> NormalizeMovementNameAsync(string input, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(input))
@@ -114,14 +118,30 @@ public class MovementDefinitionService : IMovementDefinitionService
 
         var normalizedInput = NormalizeSearchTerm(input);
 
+        // Try to extract core movement from distance-prefixed input (WOD-33)
+        var coreMovement = ExtractCoreMovementFromDistancePrefixed(input);
+
         await EnsureCacheLoadedAsync(cancellationToken);
 
-        // Try direct lookup in alias cache
+        // Try direct lookup in alias cache (original input)
         if (_aliasToIdCache!.TryGetValue(normalizedInput, out var movementId))
         {
             if (_idToMovementCache!.TryGetValue(movementId, out var movement))
             {
                 return movement.CanonicalName;
+            }
+        }
+
+        // Try core movement if distance was extracted (WOD-33)
+        if (coreMovement != null)
+        {
+            var normalizedCore = NormalizeSearchTerm(coreMovement);
+            if (_aliasToIdCache.TryGetValue(normalizedCore, out var coreId))
+            {
+                if (_idToMovementCache!.TryGetValue(coreId, out var movement))
+                {
+                    return movement.CanonicalName;
+                }
             }
         }
 
@@ -216,6 +236,41 @@ public class MovementDefinitionService : IMovementDefinitionService
     #endregion
 
     #region Private Cache Methods
+
+    /// <summary>
+    /// Extracts the core movement name from a distance-prefixed string.
+    /// Examples: "400m run" -> "run", "1 mile run" -> "run", "800m row" -> "row"
+    /// </summary>
+    private static string? ExtractCoreMovementFromDistancePrefixed(string input)
+    {
+        if (string.IsNullOrWhiteSpace(input))
+            return null;
+
+        var trimmed = input.Trim().ToLowerInvariant();
+
+        // Pattern: distance + unit + movement (e.g., "400m run", "1.5 mile run", "800 meter row")
+        // Distance units: m, meter(s), km, k, mi, mile(s), ft, feet
+        var distancePattern = @"^\s*\d+\.?\d*\s*(m|meters?|km|k|mi|miles?|ft|feet)\s+(.+)$";
+        var match = System.Text.RegularExpressions.Regex.Match(trimmed, distancePattern,
+            System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+        if (match.Success && match.Groups[2].Success)
+        {
+            return match.Groups[2].Value.Trim();
+        }
+
+        // Also try pattern with space before unit: "1 mile run"
+        var spacedPattern = @"^\s*\d+\.?\d*\s+(m|meters?|km|k|mi|miles?|ft|feet)\s+(.+)$";
+        var spacedMatch = System.Text.RegularExpressions.Regex.Match(trimmed, spacedPattern,
+            System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+        if (spacedMatch.Success && spacedMatch.Groups[2].Success)
+        {
+            return spacedMatch.Groups[2].Value.Trim();
+        }
+
+        return null;
+    }
 
     /// <summary>
     /// Ensures the cache is loaded, with thread-safe lazy initialization.

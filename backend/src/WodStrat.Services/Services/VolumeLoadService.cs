@@ -124,6 +124,8 @@ public class VolumeLoadService : IVolumeLoadService
         if (movementDefinition.IsBodyweight || weight <= 0)
         {
             result.LoadClassification = "Bodyweight";
+            // Bodyweight movements don't need weight-based data, so they're considered "sufficient"
+            result.HasSufficientData = true;
             result.Tip = movementDefinition.IsBodyweight
                 ? $"Focus on movement efficiency and consistent rep cadence for {movementDefinition.DisplayName}."
                 : $"No load specified for {movementDefinition.DisplayName}. Check workout prescription.";

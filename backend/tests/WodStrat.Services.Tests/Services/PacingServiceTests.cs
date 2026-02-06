@@ -775,6 +775,213 @@ public class PacingServiceTests
 
     #endregion
 
+    #region CalculateMovementPacingAsync Tests - Benchmark Mapping Scenarios (WOD-33)
+
+    [Fact]
+    public async Task CalculateMovementPacingAsync_RunMovementWith5kBenchmark_ReturnsCorrectBenchmarkUsed()
+    {
+        // Arrange - Simulates the "run" movement mapped to "5k Run" benchmark
+        var benchmarkDefinition = _fixture.Build<BenchmarkDefinition>()
+            .With(x => x.Name, "5k Run")
+            .With(x => x.Slug, "5k-run")
+            .With(x => x.MetricType, BenchmarkMetricType.Time)
+            .With(x => x.IsActive, true)
+            .Create();
+
+        var movement = _fixture.Build<MovementDefinition>()
+            .With(x => x.Id, 100)
+            .With(x => x.CanonicalName, "run")
+            .With(x => x.DisplayName, "Run")
+            .With(x => x.IsDeleted, false)
+            .Create();
+
+        var mapping = _fixture.Build<BenchmarkMovementMapping>()
+            .With(x => x.BenchmarkDefinitionId, benchmarkDefinition.Id)
+            .With(x => x.MovementDefinitionId, movement.Id)
+            .With(x => x.RelevanceFactor, 1.0m)
+            .With(x => x.BenchmarkDefinition, benchmarkDefinition)
+            .Create();
+
+        // For time metrics, lower is better: 20th (slowest) to 95th (fastest)
+        var populationData = CreatePopulationData(1500m, 1350m, 1200m, 1080m, 960m); // In seconds
+        populationData.BenchmarkDefinitionId = benchmarkDefinition.Id;
+
+        var athleteBenchmark = _fixture.Build<AthleteBenchmark>()
+            .With(x => x.AthleteId, 1)
+            .With(x => x.BenchmarkDefinitionId, benchmarkDefinition.Id)
+            .With(x => x.Value, 1050m) // Above 80th percentile (faster than 1080)
+            .With(x => x.IsDeleted, false)
+            .Create();
+
+        var movementQueryable = new[] { movement }.AsQueryable().BuildMock();
+        _database.Get<MovementDefinition>().Returns(movementQueryable);
+
+        var mappingQueryable = new[] { mapping }.AsQueryable().BuildMock();
+        _database.Get<BenchmarkMovementMapping>().Returns(mappingQueryable);
+
+        var athleteBenchmarkQueryable = new[] { athleteBenchmark }.AsQueryable().BuildMock();
+        _database.Get<AthleteBenchmark>().Returns(athleteBenchmarkQueryable);
+
+        var populationQueryable = new[] { populationData }.AsQueryable().BuildMock();
+        _database.Get<PopulationBenchmarkPercentile>().Returns(populationQueryable);
+
+        // Act
+        var result = await _sut.CalculateMovementPacingAsync(1, movement.Id, 1, CancellationToken.None);
+
+        // Assert
+        result.Should().NotBeNull();
+        result!.MovementName.Should().Be("Run");
+        result.BenchmarkUsed.Should().Be("5k Run");
+        result.HasAthleteBenchmark.Should().BeTrue();
+        result.HasPopulationData.Should().BeTrue();
+        result.PacingLevel.Should().Be("Heavy"); // Above 80th percentile
+    }
+
+    [Fact]
+    public async Task CalculateMovementPacingAsync_PullUpMovementWithMaxPullUpsBenchmark_ReturnsCorrectBenchmarkUsed()
+    {
+        // Arrange - Simulates the "pull-up" movement mapped to "Max Unbroken Pull-Ups" benchmark
+        var benchmarkDefinition = _fixture.Build<BenchmarkDefinition>()
+            .With(x => x.Name, "Max Unbroken Pull-Ups")
+            .With(x => x.Slug, "max-unbroken-pull-ups")
+            .With(x => x.MetricType, BenchmarkMetricType.Reps)
+            .With(x => x.IsActive, true)
+            .Create();
+
+        var movement = _fixture.Build<MovementDefinition>()
+            .With(x => x.Id, 101)
+            .With(x => x.CanonicalName, "pull-up")
+            .With(x => x.DisplayName, "Pull-Up")
+            .With(x => x.IsDeleted, false)
+            .Create();
+
+        var mapping = _fixture.Build<BenchmarkMovementMapping>()
+            .With(x => x.BenchmarkDefinitionId, benchmarkDefinition.Id)
+            .With(x => x.MovementDefinitionId, movement.Id)
+            .With(x => x.RelevanceFactor, 1.0m)
+            .With(x => x.BenchmarkDefinition, benchmarkDefinition)
+            .Create();
+
+        // For reps metrics, higher is better
+        var populationData = CreatePopulationData(5m, 12m, 20m, 30m, 45m);
+        populationData.BenchmarkDefinitionId = benchmarkDefinition.Id;
+
+        var athleteBenchmark = _fixture.Build<AthleteBenchmark>()
+            .With(x => x.AthleteId, 1)
+            .With(x => x.BenchmarkDefinitionId, benchmarkDefinition.Id)
+            .With(x => x.Value, 35m) // Above 80th percentile
+            .With(x => x.IsDeleted, false)
+            .Create();
+
+        var movementQueryable = new[] { movement }.AsQueryable().BuildMock();
+        _database.Get<MovementDefinition>().Returns(movementQueryable);
+
+        var mappingQueryable = new[] { mapping }.AsQueryable().BuildMock();
+        _database.Get<BenchmarkMovementMapping>().Returns(mappingQueryable);
+
+        var athleteBenchmarkQueryable = new[] { athleteBenchmark }.AsQueryable().BuildMock();
+        _database.Get<AthleteBenchmark>().Returns(athleteBenchmarkQueryable);
+
+        var populationQueryable = new[] { populationData }.AsQueryable().BuildMock();
+        _database.Get<PopulationBenchmarkPercentile>().Returns(populationQueryable);
+
+        // Act
+        var result = await _sut.CalculateMovementPacingAsync(1, movement.Id, 21, CancellationToken.None);
+
+        // Assert
+        result.Should().NotBeNull();
+        result!.MovementName.Should().Be("Pull-Up");
+        result.BenchmarkUsed.Should().Be("Max Unbroken Pull-Ups");
+        result.HasAthleteBenchmark.Should().BeTrue();
+        result.HasPopulationData.Should().BeTrue();
+        result.PacingLevel.Should().Be("Heavy"); // Above 80th percentile
+        result.RecommendedSets.Should().NotBeEmpty();
+    }
+
+    [Fact]
+    public async Task CalculateMovementPacingAsync_MappingExistsButNoAthleteBenchmark_ReturnsModeratePacingWithBenchmarkName()
+    {
+        // Arrange - Benchmark mapping exists but athlete hasn't recorded this benchmark
+        var benchmarkDefinition = _fixture.Build<BenchmarkDefinition>()
+            .With(x => x.Name, "5k Run")
+            .With(x => x.MetricType, BenchmarkMetricType.Time)
+            .With(x => x.IsActive, true)
+            .Create();
+
+        var movement = _fixture.Build<MovementDefinition>()
+            .With(x => x.Id, 100)
+            .With(x => x.CanonicalName, "run")
+            .With(x => x.DisplayName, "Run")
+            .With(x => x.IsDeleted, false)
+            .Create();
+
+        var mapping = _fixture.Build<BenchmarkMovementMapping>()
+            .With(x => x.BenchmarkDefinitionId, benchmarkDefinition.Id)
+            .With(x => x.MovementDefinitionId, movement.Id)
+            .With(x => x.RelevanceFactor, 1.0m)
+            .With(x => x.BenchmarkDefinition, benchmarkDefinition)
+            .Create();
+
+        var populationData = CreatePopulationData(1500m, 1350m, 1200m, 1080m, 960m);
+        populationData.BenchmarkDefinitionId = benchmarkDefinition.Id;
+
+        var movementQueryable = new[] { movement }.AsQueryable().BuildMock();
+        _database.Get<MovementDefinition>().Returns(movementQueryable);
+
+        var mappingQueryable = new[] { mapping }.AsQueryable().BuildMock();
+        _database.Get<BenchmarkMovementMapping>().Returns(mappingQueryable);
+
+        // No athlete benchmark recorded
+        var athleteBenchmarkQueryable = Array.Empty<AthleteBenchmark>().AsQueryable().BuildMock();
+        _database.Get<AthleteBenchmark>().Returns(athleteBenchmarkQueryable);
+
+        var populationQueryable = new[] { populationData }.AsQueryable().BuildMock();
+        _database.Get<PopulationBenchmarkPercentile>().Returns(populationQueryable);
+
+        // Act
+        var result = await _sut.CalculateMovementPacingAsync(1, movement.Id, 1, CancellationToken.None);
+
+        // Assert
+        result.Should().NotBeNull();
+        result!.MovementName.Should().Be("Run");
+        result.BenchmarkUsed.Should().Be("5k Run"); // Benchmark name still shown even without athlete data
+        result.HasAthleteBenchmark.Should().BeFalse();
+        result.HasPopulationData.Should().BeTrue();
+        result.PacingLevel.Should().Be("Moderate"); // Default when no athlete benchmark
+    }
+
+    [Fact]
+    public async Task CalculateMovementPacingAsync_NoBenchmarkMapping_ReturnsBenchmarkUsedAsNone()
+    {
+        // Arrange - No benchmark mapping exists for this movement
+        var movement = _fixture.Build<MovementDefinition>()
+            .With(x => x.Id, 102)
+            .With(x => x.CanonicalName, "box-step-up")
+            .With(x => x.DisplayName, "Box Step-Up")
+            .With(x => x.IsDeleted, false)
+            .Create();
+
+        var movementQueryable = new[] { movement }.AsQueryable().BuildMock();
+        _database.Get<MovementDefinition>().Returns(movementQueryable);
+
+        // No benchmark mapping
+        var mappingQueryable = Array.Empty<BenchmarkMovementMapping>().AsQueryable().BuildMock();
+        _database.Get<BenchmarkMovementMapping>().Returns(mappingQueryable);
+
+        // Act
+        var result = await _sut.CalculateMovementPacingAsync(1, movement.Id, 15, CancellationToken.None);
+
+        // Assert
+        result.Should().NotBeNull();
+        result!.MovementName.Should().Be("Box Step-Up");
+        result.BenchmarkUsed.Should().Be("None"); // No mapping = "None"
+        result.HasAthleteBenchmark.Should().BeFalse();
+        result.HasPopulationData.Should().BeFalse();
+        result.PacingLevel.Should().Be("Moderate"); // Default pacing
+    }
+
+    #endregion
+
     #region CalculateCurrentUserWorkoutPacingAsync Tests
 
     [Fact]

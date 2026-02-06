@@ -339,12 +339,8 @@ public class PacingService : IPacingService
         int repCount,
         CancellationToken cancellationToken)
     {
-        // Find the benchmark mapping for this movement
-        var benchmarkMapping = await _database.Get<BenchmarkMovementMapping>()
-            .Include(m => m.BenchmarkDefinition)
-            .Where(m => m.MovementDefinitionId == movementDefinition.Id)
-            .OrderByDescending(m => m.RelevanceFactor) // Use the most relevant benchmark
-            .FirstOrDefaultAsync(cancellationToken);
+        // Find the benchmark mapping for this movement, prioritizing mappings where athlete has a benchmark
+        var benchmarkMapping = await FindBestBenchmarkMappingAsync(athleteId, movementDefinition.Id, cancellationToken);
 
         // Initialize default values
         var pacingLevel = PacingLevel.Moderate;
@@ -397,6 +393,48 @@ public class PacingService : IPacingService
             benchmarkName,
             hasPopulationData,
             hasAthleteBenchmark);
+    }
+
+    /// <summary>
+    /// Finds the best benchmark mapping for a movement, prioritizing mappings where the athlete has recorded a benchmark.
+    /// This ensures we use the athlete's actual data when available instead of defaulting to arbitrary ordering.
+    /// </summary>
+    private async Task<BenchmarkMovementMapping?> FindBestBenchmarkMappingAsync(
+        int athleteId,
+        int movementDefinitionId,
+        CancellationToken cancellationToken)
+    {
+        // Get all benchmark mappings for this movement
+        var allMappings = await _database.Get<BenchmarkMovementMapping>()
+            .Include(m => m.BenchmarkDefinition)
+            .Where(m => m.MovementDefinitionId == movementDefinitionId)
+            .OrderByDescending(m => m.RelevanceFactor)
+            .ToListAsync(cancellationToken);
+
+        if (allMappings.Count == 0)
+        {
+            return null;
+        }
+
+        // Get all benchmark definition IDs that the athlete has recorded
+        var athleteBenchmarkDefIds = await _database.Get<AthleteBenchmark>()
+            .Where(ab => ab.AthleteId == athleteId && !ab.IsDeleted)
+            .Select(ab => ab.BenchmarkDefinitionId)
+            .ToListAsync(cancellationToken);
+
+        // First, try to find a mapping where the athlete has a benchmark (prioritize by relevance)
+        var mappingWithAthleteBenchmark = allMappings
+            .Where(m => athleteBenchmarkDefIds.Contains(m.BenchmarkDefinitionId))
+            .OrderByDescending(m => m.RelevanceFactor)
+            .FirstOrDefault();
+
+        if (mappingWithAthleteBenchmark != null)
+        {
+            return mappingWithAthleteBenchmark;
+        }
+
+        // Fall back to the first mapping by relevance (original behavior)
+        return allMappings[0];
     }
 
     /// <summary>
